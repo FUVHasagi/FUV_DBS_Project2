@@ -49,4 +49,9 @@ public class Cart {
     public Map<Integer, OrderLine> getItems() {
         return items;
     }
+
+    public void addProduct(Product selectedProduct, int i) {
+        OrderLine temp = OrderLine.createFromProduct(selectedProduct, i);
+        addItem(temp);
+    }
 }
