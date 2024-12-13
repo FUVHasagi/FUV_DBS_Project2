@@ -53,4 +53,12 @@ public class Product {
     public double getSellPrice() {
         return sellPrice;
     }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
 }
