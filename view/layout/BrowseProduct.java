@@ -24,6 +24,7 @@ public class BrowseProduct extends JPanel {
     private JTextField textFieldMaxPrice;
     private JButton applyFilterButton;
     private JButton clearFilterButton;
+    private JTextField fieldID;
     private DefaultTableModel tableModel;
     private Product selectedProduct;
     private MySQL mySQL; // Add MySQL data access object
@@ -49,8 +50,10 @@ public class BrowseProduct extends JPanel {
 
             comboBoxSortedBy.addItem("ID");
             comboBoxSortedBy.addItem("Name");
-            comboBoxSortedBy.addItem("SellPrice");
+            comboBoxSortedBy.addItem("SellPrice ascending");
+            comboBoxSortedBy.addItem("SellPrice descending");
             // ... Add other sorting options
+
 
 
         } catch (SQLException e) {
