@@ -12,7 +12,7 @@ public class Customer {
         this.cart = new Cart(); // Initialize an empty cart
     }
 
-    // Getter and Setter for fullName
+    // Getters and Setters
     public String getFullName() {
         return fullName;
     }
@@ -21,7 +21,6 @@ public class Customer {
         this.fullName = fullName;
     }
 
-    // Getter and Setter for id
     public String getId() {
         return id;
     }
@@ -30,12 +29,11 @@ public class Customer {
         this.id = id;
     }
 
-    // Getter for cart
     public Cart getCart() {
         return cart;
     }
 
-    // Methods to interact with the cart
+    // Cart Operations
     public void addItemToCart(OrderLine orderLine) {
         if (orderLine != null) {
             cart.addItem(orderLine);

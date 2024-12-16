@@ -1,6 +1,7 @@
 package model;
 
 public class User {
+    private int id;
     private String username;
     private Customer customer;
     private String role;
