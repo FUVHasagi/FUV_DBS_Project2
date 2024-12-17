@@ -8,27 +8,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-
 public class MySQL {
     private Connection connection;
+
     public MySQL(Connection conn) {
         this.connection = conn;
     }
 
+    // Authenticate User
     public User authenticateUser(String username, String password) {
-        String query = "SELECT Roles.Name FROM Users JOIN Roles ON Users.RoleID = Roles.ID WHERE Users.Username = ? AND Users.Password = ?";
+        String query = "SELECT Users.ID, Users.DisplayName, Roles.Name AS RoleName " +
+                "FROM Users JOIN Roles ON Users.RoleID = Roles.ID " +
+                "WHERE Users.Username = ? AND Users.Password = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
             stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                String role = rs.getString("Name");
-                return new User(username, role);
+                return new User(
+                        username,
+                        rs.getString("RoleName"),
+                        rs.getString("DisplayName"),
+                        password
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -36,56 +38,115 @@ public class MySQL {
         return null;
     }
 
-    public Vector<String> getUniqueValues(String columnName) throws SQLException {
-        Vector<String> uniqueValues = new Vector<>();
-        String query = "SELECT DISTINCT " + columnName + " FROM Products"; // Use PreparedStatement for security if needed
-        try (Statement statement = connection.createStatement();
-             ResultSet rs = statement.executeQuery(query)) {
-            while (rs.next()) {
-                uniqueValues.add(rs.getString(columnName));
-            }
-        }
-        return uniqueValues;
-    }
-
-
-    public List<Product> getFilteredProducts(String filterQuery) {
-        List<Product> filteredProducts = new ArrayList<>();
-        try (Statement statement = connection.createStatement();
-             ResultSet rs = statement.executeQuery(filterQuery)) {
-
-            while (rs.next()) {
-                Product product = new Product(
-                        rs.getInt("ID"), rs.getString("Name"), rs.getDouble("SellPrice"),
-                        rs.getInt("Stock"), rs.getString("Category") // ... other fields
-                );
-                filteredProducts.add(product);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Handle database errors
-        }
-        return filteredProducts;
-    }
-
-
+    // Retrieve Product by ID
     public Product getProductById(int productId) {
-        try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM Products WHERE ID = ?")) {  // Use PreparedStatement
-            ps.setInt(1, productId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return new Product(
-                            rs.getInt("ID"), rs.getString("Name"), rs.getDouble("SellPrice"),
-                            rs.getInt("Stock"), rs.getString("Category") // ... other fields
-                    );
-                }
+        String query = "SELECT * FROM Products WHERE ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, productId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new Product(
+                        rs.getInt("ID"),
+                        rs.getString("Name"),
+                        rs.getDouble("SellPrice"),
+                        rs.getInt("Stock"),
+                        rs.getString("Category"),
+                        rs.getString("Brand")
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            // Handle database errors
         }
-        return null; // Or throw an exception
+        return null;
     }
 
-}
+    // Add Product to Stock
+    public void addProduct(Product product) {
+        String query = "INSERT INTO Products (Name, SellPrice, Stock, Category, Brand) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, product.getName());
+            stmt.setDouble(2, product.getSellPrice());
+            stmt.setInt(3, product.getStockQuantity());
+            stmt.setString(4, product.getCategory());
+            stmt.setString(5, product.getBrand());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
+    // Delete Product by ID
+    public void deleteProduct(int productId) {
+        String query = "DELETE FROM Products WHERE ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, productId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Update Product Stock
+    public void updateProductStock(int productId, int quantity) {
+        String query = "UPDATE Products SET Stock = Stock + ? WHERE ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, quantity);
+            stmt.setInt(2, productId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Modify Product Information
+    public void modifyProduct(Product product) {
+        String query = "UPDATE Products SET Name = ?, SellPrice = ?, Stock = ?, Category = ?, Brand = ? WHERE ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, product.getName());
+            stmt.setDouble(2, product.getSellPrice());
+            stmt.setInt(3, product.getStockQuantity());
+            stmt.setString(4, product.getCategory());
+            stmt.setString(5, product.getBrand());
+            stmt.setInt(6, product.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Filter Products based on criteria
+    public List<Product> getFilteredProducts(String filterQuery) {
+        List<Product> products = new ArrayList<>();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(filterQuery)) {
+            while (rs.next()) {
+                products.add(new Product(
+                        rs.getInt("ID"),
+                        rs.getString("Name"),
+                        rs.getDouble("SellPrice"),
+                        rs.getInt("Stock"),
+                        rs.getString("Category"),
+                        rs.getString("Brand")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return products;
+    }
+
+    // Fetch Unique Values for Filtering
+    public Vector<String> getUniqueValues(String columnName) {
+        Vector<String> values = new Vector<>();
+        String query = "SELECT DISTINCT " + columnName + " FROM Products";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                values.add(rs.getString(columnName));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return values;
+    }
+}
