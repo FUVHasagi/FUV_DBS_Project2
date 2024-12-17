@@ -11,13 +11,10 @@ import java.sql.SQLException;
 
 public class Application {
     private static Application instance;
-    private Connection connection;
     private MySQL mySQL;
-    private Redis redis;
     private MongoDB mongoDB;
-    private LoginController loginController;
-    private LoginView loginView;
-
+    private Redis redis;
+    private Connection connection;
 
     public static Application getInstance() {
         if (instance == null) {
@@ -33,34 +30,33 @@ public class Application {
 
     private Application() throws SQLException {
         try {
-            // Establish connection with MySQL database
+            // Initialize MySQL
             this.connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/project1", "myuser", "mypassword"
-            ); // Replace with your actual credentials
+                    "jdbc:mysql://localhost:3306/project2", "myuser", "mypassword"
+            );
             this.mySQL = new MySQL(connection);
 
-            this.redis = new Redis();       // Placeholder initialization
-            this.mongoDB = new MongoDB();   // Placeholder initialization
+            // Initialize MongoDB
+            this.mongoDB = new MongoDB();
 
-            this.loginView = new LoginView();
-            this.loginController = new LoginController(loginView, mySQL);
+            // Initialize Redis
+            this.redis = new Redis();
+
+            // Initialize LoginView and Controller
+            LoginView loginView = new LoginView();
+            new LoginController(loginView, mySQL, mongoDB);
 
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Database connection failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Failed to connect to MySQL: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            throw e;
+        } catch (Exception e) {
             e.printStackTrace();
-            throw new SQLException("Failed to connect to the database");
+            JOptionPane.showMessageDialog(null, "Initialization failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
         }
     }
 
-
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                Application.getInstance();  // Start the application
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        SwingUtilities.invokeLater(() -> Application.getInstance());
     }
 }
