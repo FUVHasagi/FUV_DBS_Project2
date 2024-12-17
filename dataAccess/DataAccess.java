@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface DataAccess {
     // MySQL methods
-    Product getProductById(int productId);
+    //Product getProductById(int productId);
     // ... other MySQL methods for products and users
 
     // MongoDB methods

@@ -4,6 +4,8 @@ import controller.cashier.CashierMainScreenController;
 import controller.customer.CustomerMainScreenController;
 import controller.manager.ManagerMainScreenController;
 import dataAccess.MySQL;
+import dataAccess.MongoDB;
+import model.Customer;
 import model.User;
 import view.LoginView;
 import view.cashier.CashierMainScreen;
@@ -17,10 +19,12 @@ import java.awt.event.ActionListener;
 public class LoginController {
     private LoginView loginView;
     private MySQL mySQL;
+    private MongoDB mongoDB;
 
-    public LoginController(LoginView loginView, MySQL mySQL) {
+    public LoginController(LoginView loginView, MySQL mySQL, MongoDB mongoDB) {
         this.loginView = loginView;
         this.mySQL = mySQL;
+        this.mongoDB = mongoDB;
 
         // Show the login view
         this.loginView.setVisible(true);
@@ -44,9 +48,16 @@ public class LoginController {
 
             String role = user.getRole(); // Get the user's role
 
-            switch (role) {  // Using switch for clarity and potential expansion
+            switch (role) {
                 case "customer":
-                    new CustomerMainScreenController(user.getCustomer()); // Open CustomerMainScreen
+                    // Fetch associated Customer from MongoDB
+                    Customer customer = mongoDB.getCustomerById(user.getCustomer().getId());
+                    if (customer != null) {
+                        user.setCustomer(customer); // Associate the retrieved customer with the user
+                        new CustomerMainScreenController(customer); // Open CustomerMainScreen
+                    } else {
+                        JOptionPane.showMessageDialog(loginView, "Customer not found in the database.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                     break;
                 case "cashier":
                     new CashierMainScreenController(new CashierMainScreen()); // Open CashierMainScreen
@@ -55,10 +66,8 @@ public class LoginController {
                     new ManagerMainScreenController(new ManagerMainScreen()); // Open ManagerMainScreen
                     break;
                 default:
-                    // Handle unknown roles (e.g., log error or show a message)
                     JOptionPane.showMessageDialog(loginView, "Unknown user role: " + role, "Error", JOptionPane.ERROR_MESSAGE);
             }
-
         } else {
             loginView.displayErrorMessage("Invalid username or password");
         }

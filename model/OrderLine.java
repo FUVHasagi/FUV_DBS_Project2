@@ -59,6 +59,9 @@ public class OrderLine {
         this.quantity = quantity;
         calculateCost();
     }
+    public void setCost() {
+        this.cost = price*quantity;
+    }
 
     public double getCost() {
         return cost;

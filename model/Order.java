@@ -74,4 +74,8 @@ public class Order {
                 ", totalCost=" + totalCost +
                 '}';
     }
+
+    public void setTotalCost(double totalCost) {
+        this.totalCost = (float) totalCost;
+    }
 }
