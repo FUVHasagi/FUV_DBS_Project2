@@ -40,7 +40,7 @@ public class Application {
             this.mongoDB = new MongoDB();
 
             // Initialize Redis
-            this.redis = new Redis();
+            this.redis = new Redis(this.mongoDB);
 
             // Initialize LoginView and Controller
             LoginView loginView = new LoginView();

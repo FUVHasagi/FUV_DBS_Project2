@@ -17,6 +17,11 @@ public class MongoDB {
         this.database = mongoClient.getDatabase("project2");
     }
 
+
+    public MongoDatabase getDatabase() {
+        return this.database;
+    }
+
     // Save a customer and their cart
     public void saveCustomer(Customer customer) {
         MongoCollection<Document> collection = database.getCollection("customers");
