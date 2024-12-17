@@ -8,19 +8,16 @@ import org.bson.Document;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MongoDB implements DataAccess {
+public class MongoDB {
     private MongoClient mongoClient;
     private MongoDatabase database;
 
     public MongoDB() {
-        // Initialize MongoDB connection
-        String connectionString = "mongodb://localhost:27017"; // Replace with your connection string
-        this.mongoClient = MongoClients.create(connectionString);
-        this.database = mongoClient.getDatabase("store_management"); // Use a consistent database name
+        this.mongoClient = MongoClients.create("mongodb://localhost:27017/");
+        this.database = mongoClient.getDatabase("project2");
     }
 
-    // Save a customer to the MongoDB collection
-    @Override
+    // Save a customer and their cart
     public void saveCustomer(Customer customer) {
         MongoCollection<Document> collection = database.getCollection("customers");
         Document customerDoc = new Document("id", customer.getId())
@@ -29,35 +26,31 @@ public class MongoDB implements DataAccess {
         collection.insertOne(customerDoc);
     }
 
-    // Retrieve a customer by ID
-    @Override
     public Customer getCustomerById(String customerId) {
         MongoCollection<Document> collection = database.getCollection("customers");
         Document doc = collection.find(Filters.eq("id", customerId)).first();
-
         if (doc != null) {
-            return new Customer(
+            Customer customer = new Customer(
                     doc.getString("fullName"),
                     doc.getString("id")
             );
+            customer.setCart(deserializeCart((List<Document>) doc.get("cart")));
+            return customer;
         }
         return null;
     }
 
-    // Save an order to MongoDB
-    @Override
+    // Save an order
     public void saveOrder(Order order) {
         MongoCollection<Document> collection = database.getCollection("orders");
         Document orderDoc = new Document("orderID", order.getOrderID())
                 .append("customerID", order.getCustomerID())
                 .append("orderDate", order.getOrderDate())
                 .append("totalCost", order.getTotalCost())
-                .append("lines", serializeOrderLines(order.getLines()));
+                .append("orderLines", serializeOrderLines(order.getLines()));
         collection.insertOne(orderDoc);
     }
 
-    // Retrieve orders by customer ID
-    @Override
     public List<Order> getOrdersByCustomerId(String customerId) {
         MongoCollection<Document> collection = database.getCollection("orders");
         List<Order> orders = new ArrayList<>();
@@ -66,15 +59,16 @@ public class MongoDB implements DataAccess {
             order.setOrderID(doc.getString("orderID"));
             order.setCustomerID(doc.getString("customerID"));
             order.setOrderDate(doc.getString("orderDate"));
-            order.setTotalCost((double)doc.getDouble("totalCost"));
-            order.setLines(deserializeOrderLines((List<Document>) doc.get("lines")));
+            order.setTotalCost(doc.getDouble("totalCost"));
+            order.setLines(deserializeOrderLines((List<Document>) doc.get("orderLines")));
             orders.add(order);
         }
         return orders;
     }
 
+    // --- Reviews Management ---
+
     // Save a product review
-    @Override
     public void saveReview(Review review) {
         MongoCollection<Document> collection = database.getCollection("reviews");
         Document reviewDoc = new Document("productID", review.getProductId())
@@ -84,8 +78,7 @@ public class MongoDB implements DataAccess {
         collection.insertOne(reviewDoc);
     }
 
-    // Retrieve reviews by product ID
-    @Override
+    // Retrieve reviews for a specific product
     public List<Review> getReviewsByProductId(int productId) {
         MongoCollection<Document> collection = database.getCollection("reviews");
         List<Review> reviews = new ArrayList<>();
@@ -101,43 +94,74 @@ public class MongoDB implements DataAccess {
         return reviews;
     }
 
-    // Serialize a cart object to a MongoDB-friendly format
+    // Retrieve average rating for a specific product
+    public double getAverageRatingByProductId(int productId) {
+        MongoCollection<Document> collection = database.getCollection("reviews");
+        double totalRating = 0.0;
+        int count = 0;
+
+        for (Document doc : collection.find(Filters.eq("productID", productId))) {
+            totalRating += doc.getDouble("rating");
+            count++;
+        }
+
+        return count > 0 ? totalRating / count : 0.0;
+    }
+
+    // --- Serialization and Deserialization Helpers ---
+
     private List<Document> serializeCart(Cart cart) {
         List<Document> cartItems = new ArrayList<>();
         for (OrderLine orderLine : cart.getItems().values()) {
             cartItems.add(new Document("productID", orderLine.getProductID())
                     .append("productName", orderLine.getProductName())
-                    .append("quantity", orderLine.getQuantity())
                     .append("price", orderLine.getPrice())
+                    .append("quantity", orderLine.getQuantity())
                     .append("cost", orderLine.getCost()));
         }
         return cartItems;
     }
 
-    // Serialize order lines to MongoDB-friendly format
+    private Cart deserializeCart(List<Document> cartDocs) {
+        Cart cart = new Cart();
+        if (cartDocs != null) {
+            for (Document doc : cartDocs) {
+                OrderLine orderLine = new OrderLine();
+                orderLine.setProductID(doc.getInteger("productID"));
+                orderLine.setProductName(doc.getString("productName"));
+                orderLine.setPrice(doc.getDouble("price"));
+                orderLine.setQuantity(doc.getInteger("quantity"));
+                orderLine.setCost();
+                cart.addItem(orderLine);
+            }
+        }
+        return cart;
+    }
+
     private List<Document> serializeOrderLines(List<OrderLine> lines) {
         List<Document> orderLines = new ArrayList<>();
         for (OrderLine line : lines) {
             orderLines.add(new Document("productID", line.getProductID())
                     .append("productName", line.getProductName())
-                    .append("quantity", line.getQuantity())
                     .append("price", line.getPrice())
+                    .append("quantity", line.getQuantity())
                     .append("cost", line.getCost()));
         }
         return orderLines;
     }
 
-    // Deserialize order lines from MongoDB format
-    private List<OrderLine> deserializeOrderLines(List<Document> docs) {
+    private List<OrderLine> deserializeOrderLines(List<Document> lineDocs) {
         List<OrderLine> lines = new ArrayList<>();
-        for (Document doc : docs) {
-            OrderLine line = new OrderLine();
-            line.setProductID(doc.getInteger("productID"));
-            line.setProductName(doc.getString("productName"));
-            line.setQuantity(doc.getInteger("quantity"));
-            line.setPrice(doc.getDouble("price"));
-            line.setCost(); // Automatically calculates cost
-            lines.add(line);
+        if (lineDocs != null) {
+            for (Document doc : lineDocs) {
+                OrderLine orderLine = new OrderLine();
+                orderLine.setProductID(doc.getInteger("productID"));
+                orderLine.setProductName(doc.getString("productName"));
+                orderLine.setPrice(doc.getDouble("price"));
+                orderLine.setQuantity(doc.getInteger("quantity"));
+                orderLine.setCost();
+                lines.add(orderLine);
+            }
         }
         return lines;
     }

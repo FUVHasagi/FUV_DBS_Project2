@@ -50,6 +50,9 @@ public class Customer {
         cart.clear();
     }
 
+    public void setCart(Cart cart) {
+        this.cart = cart;
+    }
     public double calculateTotal() {
         return cart.calculateTotal();
     }
