@@ -8,6 +8,7 @@ import view.cashier.CashierOrderHistoryView;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 public class CashierOrderHistoryController implements ActionListener {
     private CashierOrderHistoryView view;
@@ -18,13 +19,13 @@ public class CashierOrderHistoryController implements ActionListener {
         this.cashier = cashier;
         this.mongoDB = mongoDB;
 
-        // Initialize view
+        // Initialize the view
         this.view = new CashierOrderHistoryView();
 
         // Populate order history
         loadOrderHistory();
 
-        // Add action listener
+        // Add action listener to the inspect button
         this.view.getInspectOrderButton().addActionListener(this);
 
         // Display the view
@@ -33,7 +34,7 @@ public class CashierOrderHistoryController implements ActionListener {
 
     private void loadOrderHistory() {
         try {
-            var orders = mongoDB.getOrdersBySource("cashier", String.valueOf(cashier.getId()));
+            List<Order> orders = mongoDB.getOrdersBySource("cashier", String.valueOf(cashier.getId()));
             view.getBrowseOrderHistory().setTableData(orders);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(view, "Failed to load order history.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -48,9 +49,8 @@ public class CashierOrderHistoryController implements ActionListener {
     }
 
     private void handleInspectOrder() {
-        var selectedOrderId = view.getBrowseOrderHistory().getSelectedOrderID();
+        String selectedOrderId = view.getBrowseOrderHistory().getSelectedOrderID();
         if (selectedOrderId != null) {
-            // Call the Order Detail View and Controller (to be implemented later)
             new CashierOrderDetailController(selectedOrderId, mongoDB, cashier);
         } else {
             JOptionPane.showMessageDialog(view, "Please select an order to inspect.", "Warning", JOptionPane.WARNING_MESSAGE);

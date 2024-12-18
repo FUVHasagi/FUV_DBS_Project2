@@ -190,4 +190,22 @@ public class MongoDB {
         }
         return lines;
     }
+
+    public Customer ensureCustomerExists(String customerId, String displayName) {
+        // Check if the customer already exists in the MongoDB database
+        Customer existingCustomer = getCustomerById(customerId);
+        if (existingCustomer != null) {
+            // Return the existing customer
+            return existingCustomer;
+        }
+
+        // If customer doesn't exist, create a new one
+        Customer newCustomer = new Customer(displayName, customerId);
+
+        // Save the new customer to the MongoDB database
+        saveCustomer(newCustomer);
+
+        // Return the newly created customer
+        return newCustomer;
+    }
 }

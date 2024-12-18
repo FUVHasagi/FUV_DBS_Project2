@@ -16,9 +16,12 @@ public class MySQL {
     }
 
     // Authenticate User
+    // Authenticate User with Customer ID
     public User authenticateUser(String username, String password) {
-        String query = "SELECT Users.ID, Users.DisplayName, Roles.Name AS RoleName " +
-                "FROM Users JOIN Roles ON Users.RoleID = Roles.ID " +
+        String query = "SELECT Users.ID, Users.Username, Users.Password, Users.CustomerID, " +
+                "Users.DisplayName, Roles.Name AS RoleName " +
+                "FROM Users " +
+                "JOIN Roles ON Users.RoleID = Roles.ID " +
                 "WHERE Users.Username = ? AND Users.Password = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
@@ -26,10 +29,12 @@ public class MySQL {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new User(
-                        username,
-                        rs.getString("RoleName"),
+                        rs.getInt("ID"),
+                        rs.getString("Username"),
+                        rs.getString("Password"),
+                        rs.getString("CustomerID"),
                         rs.getString("DisplayName"),
-                        password
+                        rs.getString("RoleName")
                 );
             }
         } catch (SQLException e) {
@@ -37,6 +42,7 @@ public class MySQL {
         }
         return null;
     }
+
 
     // Retrieve Product by ID
     public Product getProductById(int productId) {

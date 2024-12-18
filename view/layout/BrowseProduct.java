@@ -57,7 +57,7 @@ public class BrowseProduct extends JPanel {
         }
     }
 
-    private void updateProductTable() {
+    public void updateProductTable() {
         String filterQuery = "SELECT * FROM Products";
 
         String category = (String) comboBoxCategory.getSelectedItem();

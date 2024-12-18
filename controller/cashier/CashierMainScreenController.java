@@ -40,7 +40,7 @@ public class CashierMainScreenController implements ActionListener {
         } else if (e.getSource() == view.getNewOrderButton()) {
             new CashierOrderController(cashier, mySQL, mongoDB); // Open new order creation
         } else if (e.getSource() == view.getOrderHistoryButton()) {
-            new CashierOrderHistoryController(cashier, mySQL, mongoDB); // Open order history
+            new CashierOrderHistoryController(cashier, mongoDB); // Open order history
         }
     }
 }

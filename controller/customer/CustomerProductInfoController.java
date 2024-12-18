@@ -31,27 +31,37 @@ public class CustomerProductInfoController implements ActionListener {
 
         this.view = new CustomerProductInfoView(productInfoPanel);
 
-        // Populate initial product reviews
-        loadProductReviews();
+
 
         // Add action listeners
         this.view.getAddToCartButton().addActionListener(this);
         this.view.getPostReviewButton().addActionListener(this);
 
         this.view.setVisible(true);
+
+        // Populate initial product reviews
+        loadProductReviews();
     }
 
     private void loadProductReviews() {
         StringBuilder reviewsText = new StringBuilder();
         List<Review> reviews = mongoDB.getReviewsByProductId(product.getId());
-        for (Review review : reviews) {
-            reviewsText.append("Customer: ").append(review.getCustomerId())
-                    .append("\nRating: ").append(review.getRating())
-                    .append("\nComment: ").append(review.getComment())
-                    .append("\n\n");
+
+        if (reviews == null || reviews.isEmpty()) {
+            // No reviews found for the product
+            reviewsText.append("There are no reviews for this product yet.");
+        } else {
+            for (Review review : reviews) {
+                reviewsText.append("Customer: ").append(review.getCustomerId())
+                        .append("\nRating: ").append(review.getRating())
+                        .append("\nComment: ").append(review.getComment())
+                        .append("\n\n");
+            }
         }
+
         view.getReadReviewArea().setText(reviewsText.toString());
     }
+
 
     @Override
     public void actionPerformed(ActionEvent e) {

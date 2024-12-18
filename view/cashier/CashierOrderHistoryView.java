@@ -1,32 +1,30 @@
-package view.customer;
+package view.cashier;
 
 import view.layout.BrowseOrderHistory;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class CustomerOrderHistory extends JFrame {
+public class CashierOrderHistoryView extends JFrame {
     private BrowseOrderHistory browseOrderHistory;
     private JButton inspectOrderButton;
 
-    public CustomerOrderHistory() {
-        setTitle("Customer Order History");
-        setSize(800, 600);
-        setLocationRelativeTo(null);
+    public CashierOrderHistoryView() {
+        setTitle("Cashier Order History");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(800, 600);
         setLayout(new BorderLayout());
 
         // Initialize components
         browseOrderHistory = new BrowseOrderHistory();
         inspectOrderButton = new JButton("Inspect Order");
 
-        // Add components to the frame
+        // Layout components
         add(browseOrderHistory, BorderLayout.CENTER);
 
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.add(inspectOrderButton);
-        add(bottomPanel, BorderLayout.SOUTH);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(inspectOrderButton);
+        add(buttonPanel, BorderLayout.SOUTH);
     }
 
     public BrowseOrderHistory getBrowseOrderHistory() {

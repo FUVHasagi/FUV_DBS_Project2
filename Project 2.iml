@@ -10,5 +10,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="mongodb.driver.sync" level="project" />
     <orderEntry type="library" exported="" name="redis.clients.jedis" level="project" />
+    <orderEntry type="library" exported="" name="mysql.connector.java" level="project" />
   </component>
 </module>

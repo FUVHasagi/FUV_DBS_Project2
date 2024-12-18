@@ -11,7 +11,9 @@ public class BrowseOrderHistory extends JPanel {
 
     private JTable orderHistoryTable;
     private DefaultTableModel tableModel;
-    private String[] columnNames = {"Order ID", "Date", "Total Cost", "Source Type"};
+    private boolean isManagerMode = false; // Default mode is not manager mode
+    private String[] columnNamesDefault = {"Order ID", "Date", "Total Cost", "Source Type"};
+    private String[] columnNamesManager = {"Order ID", "Date", "Total Cost", "Source Type", "Made By", "Customer"};
 
     public BrowseOrderHistory() {
         setLayout(new BorderLayout());
@@ -20,7 +22,7 @@ public class BrowseOrderHistory extends JPanel {
 
     private void initializeComponents() {
         // Initialize table model and table
-        tableModel = new DefaultTableModel(columnNames, 0);
+        tableModel = new DefaultTableModel(columnNamesDefault, 0);
         orderHistoryTable = new JTable(tableModel);
         orderHistoryTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -34,12 +36,23 @@ public class BrowseOrderHistory extends JPanel {
         tableModel.setRowCount(0); // Clear existing rows
 
         for (Order order : orders) {
-            tableModel.addRow(new Object[]{
-                    order.getOrderID(),
-                    order.getOrderDate(),
-                    order.getTotalCost(),
-                    order.getSourceType()
-            });
+            if (isManagerMode) {
+                tableModel.addRow(new Object[]{
+                        order.getOrderID(),
+                        order.getOrderDate(),
+                        order.getTotalCost(),
+                        order.getSourceType(),
+                        order.getSourceID(),    // Made By
+                        order.getCustomerID()   // Customer
+                });
+            } else {
+                tableModel.addRow(new Object[]{
+                        order.getOrderID(),
+                        order.getOrderDate(),
+                        order.getTotalCost(),
+                        order.getSourceType()
+                });
+            }
         }
     }
 
@@ -50,5 +63,12 @@ public class BrowseOrderHistory extends JPanel {
             return (String) tableModel.getValueAt(selectedRow, 0);
         }
         return null;
+    }
+
+    // Toggle between manager mode and default mode
+    public void setManagerMode(boolean isManagerMode) {
+        this.isManagerMode = isManagerMode;
+        tableModel.setColumnIdentifiers(isManagerMode ? columnNamesManager : columnNamesDefault);
+        tableModel.setRowCount(0); // Clear the table to avoid inconsistent state
     }
 }
