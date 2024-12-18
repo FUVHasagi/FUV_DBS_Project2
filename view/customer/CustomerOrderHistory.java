@@ -1,16 +1,16 @@
-package view.customer;
+package view.cashier;
 
 import view.layout.BrowseOrderHistory;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class CustomerOrderHistory extends JFrame {
+public class CashierOrderHistoryView extends JFrame {
     private BrowseOrderHistory browseOrderHistory;
     private JButton inspectOrderButton;
 
-    public CustomerOrderHistory() {
-        setTitle("Customer Order History");
+    public CashierOrderHistoryView() {
+        setTitle("Cashier Order History");
         setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

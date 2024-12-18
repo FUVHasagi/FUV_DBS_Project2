@@ -36,11 +36,11 @@ public class CashierMainScreenController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == view.getProductBrowseButton()) {
-            new CashierProductCheckController(cashier, mySQL, mongoDB); // Open product check
+            new CashierProductCheckController(cashier, mySQL); // Open product check
         } else if (e.getSource() == view.getNewOrderButton()) {
             new CashierOrderController(cashier, mySQL, mongoDB); // Open new order creation
         } else if (e.getSource() == view.getOrderHistoryButton()) {
-            new CashierOrderHistoryController(cashier, mongoDB); // Open order history
+            new CashierOrderHistoryController(cashier, mySQL, mongoDB); // Open order history
         }
     }
 }
