@@ -1,23 +1,39 @@
 package view.customer;
 
+import view.layout.BrowseOrderHistory;
+
 import javax.swing.*;
+import java.awt.*;
 
 public class CustomerOrderHistory extends JFrame {
-    private JPanel panel;
-    private JTable table;
-    private JScrollPane jScrollPane1;
+    private BrowseOrderHistory browseOrderHistory;
     private JButton inspectOrderButton;
-    private JButton button2;
 
     public CustomerOrderHistory() {
-        setTitle("Order Table View");
+        setTitle("Customer Order History");
         setSize(800, 600);
         setLocationRelativeTo(null);
-        initTable();
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Initialize components
+        browseOrderHistory = new BrowseOrderHistory();
+        inspectOrderButton = new JButton("Inspect Order");
+
+        // Add components to the frame
+        add(browseOrderHistory, BorderLayout.CENTER);
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.add(inspectOrderButton);
+        add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    private void initTable() {
-
+    public BrowseOrderHistory getBrowseOrderHistory() {
+        return browseOrderHistory;
     }
 
+    public JButton getInspectOrderButton() {
+        return inspectOrderButton;
+    }
 }
