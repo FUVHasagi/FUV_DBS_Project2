@@ -58,4 +58,7 @@ public class User {
     public void setDisplayName(String displayName) {this.DisplayName = displayName;}
     public String getDisplayName() {return DisplayName;}
 
+    public String getId() {
+        return String.valueOf(id);
+    }
 }

@@ -2,12 +2,12 @@ package view.layout;
 
 import dataAccess.MySQL;
 import model.Product;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
 
@@ -27,13 +27,12 @@ public class BrowseProduct extends JPanel {
     private JTextField fieldID;
     private DefaultTableModel tableModel;
     private Product selectedProduct;
-    private MySQL mySQL; // Add MySQL data access object
+    private MySQL mySQL;
 
-    public BrowseProduct(MySQL mySQL){
+    public BrowseProduct(MySQL mySQL) {
         this.mySQL = mySQL;
         initUI();
     }
-
 
     private void populateComboBoxes() {
         try {
@@ -42,8 +41,7 @@ public class BrowseProduct extends JPanel {
                 comboBoxCategory.addItem(category);
             }
 
-            // Similar for Brand and SortedBy (if needed)
-            Vector<String> brands = mySQL.getUniqueValues("Brand");  // Assuming you have a "Brand" column
+            Vector<String> brands = mySQL.getUniqueValues("Brand");
             for (String brand : brands) {
                 comboBoxBrand.addItem(brand);
             }
@@ -52,91 +50,79 @@ public class BrowseProduct extends JPanel {
             comboBoxSortedBy.addItem("Name");
             comboBoxSortedBy.addItem("SellPrice ascending");
             comboBoxSortedBy.addItem("SellPrice descending");
-            // ... Add other sorting options
 
-
-
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            // Handle the exception (e.g., display error message)
+            JOptionPane.showMessageDialog(this, "Error loading combo box values.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-
     }
 
-
-
-
     private void updateProductTable() {
-        String filterQuery = "SELECT * FROM Products";  // Basic query
+        String filterQuery = "SELECT * FROM Products";
 
         String category = (String) comboBoxCategory.getSelectedItem();
         String brand = (String) comboBoxBrand.getSelectedItem();
         String minPrice = textFieldMinPrice.getText();
         String maxPrice = textFieldMaxPrice.getText();
 
-
-        String whereClause = "";
-
-
+        StringBuilder whereClause = new StringBuilder();
 
         if (category != null && !category.isEmpty()) {
-            whereClause += " Category = '" + category + "'";
+            whereClause.append("Category = '").append(category).append("'");
         }
 
         if (brand != null && !brand.isEmpty()) {
-            if(!whereClause.isEmpty()) {
-                whereClause += " AND ";
+            if (whereClause.length() > 0) {
+                whereClause.append(" AND ");
             }
-            whereClause += " Brand = '" + brand + "'";
+            whereClause.append("Brand = '").append(brand).append("'");
         }
 
         if (!minPrice.isEmpty()) {
-            if(!whereClause.isEmpty()) {
-                whereClause += " AND ";
+            if (whereClause.length() > 0) {
+                whereClause.append(" AND ");
             }
-            whereClause += " SellPrice >= " + minPrice;
+            whereClause.append("SellPrice >= ").append(minPrice);
         }
+
         if (!maxPrice.isEmpty()) {
-            if(!whereClause.isEmpty()) {
-                whereClause += " AND ";
+            if (whereClause.length() > 0) {
+                whereClause.append(" AND ");
             }
-            whereClause += " SellPrice <= " + maxPrice;
+            whereClause.append("SellPrice <= ").append(maxPrice);
         }
 
-
-
-
-        if (!whereClause.isEmpty()){
+        if (whereClause.length() > 0) {
             filterQuery += " WHERE " + whereClause;
         }
 
-
         String sortBy = (String) comboBoxSortedBy.getSelectedItem();
-        if (sortBy != null && !sortBy.isEmpty()){
+        if (sortBy != null && !sortBy.isEmpty()) {
             filterQuery += " ORDER BY " + sortBy;
         }
 
+        try {
+            List<Product> products = mySQL.getFilteredProducts(filterQuery);
+            tableModel.setRowCount(0);
 
-
-
-        List<Product> products = mySQL.getFilteredProducts(filterQuery);
-
-
-
-        tableModel.setRowCount(0); // Clear existing data
-        for (Product product : products) {
-            tableModel.addRow(new Object[]{
-                    product.getId(), product.getName(), product.getStockQuantity(), product.getSellPrice(), product.getCategory()
-                    // ... other product attributes
-            });
+            for (Product product : products) {
+                tableModel.addRow(new Object[]{
+                        product.getId(),
+                        product.getName(),
+                        product.getStockQuantity(),
+                        product.getSellPrice(),
+                        product.getCategory()
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error updating product table.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    private void initUI() {
+        this.setLayout(new BorderLayout());
 
-    public void initUI() {
-        this.setLayout(new BorderLayout()); // Example layout
-
-        // Create components
         productTable = new JTable();
         comboBoxCategory = new JComboBox<>();
         comboBoxBrand = new JComboBox<>();
@@ -150,22 +136,17 @@ public class BrowseProduct extends JPanel {
         applyFilterButton = new JButton("Apply Filter");
         clearFilterButton = new JButton("Clear Filter");
 
-
-        // Set up table model
         tableModel = new DefaultTableModel(new String[]{"ID", "Name", "Stock", "Sell Price", "Category"}, 0);
         productTable.setModel(tableModel);
         productTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Populate JComboBox models (example)
         populateComboBoxes();
 
-
-        // Add action listeners
         applyFilterButton.addActionListener(e -> updateProductTable());
         clearFilterButton.addActionListener(e -> {
-            comboBoxCategory.setSelectedItem(null);
-            comboBoxBrand.setSelectedItem(null);
-            comboBoxSortedBy.setSelectedItem(null);
+            comboBoxCategory.setSelectedIndex(-1);
+            comboBoxBrand.setSelectedIndex(-1);
+            comboBoxSortedBy.setSelectedIndex(-1);
             textFieldMinPrice.setText("");
             textFieldMaxPrice.setText("");
             updateProductTable();
@@ -177,55 +158,58 @@ public class BrowseProduct extends JPanel {
                 int selectedRow = productTable.getSelectedRow();
                 if (selectedRow != -1) {
                     int productId = (int) productTable.getValueAt(selectedRow, 0);
-                    selectedProduct = mySQL.getProductById(productId); // Use mySQL to fetch product
-                    // ... (Do something with selectedProduct) ...
+                    selectedProduct = mySQL.getProductById(productId);
                     System.out.println("Selected Product: " + selectedProduct);
                 }
             }
         });
 
-        // Add components to panel (example using GridBagLayout - adjust as needed)
         JPanel filterPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5); // Add some padding
+        gbc.insets = new Insets(5, 5, 5, 5);
 
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        filterPanel.add(categoryField, gbc);
+        gbc.gridx = 1;
+        filterPanel.add(comboBoxCategory, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 0; filterPanel.add(categoryField, gbc);
-        gbc.gridx = 1; gbc.gridy = 0; filterPanel.add(comboBoxCategory, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        filterPanel.add(brandField, gbc);
+        gbc.gridx = 1;
+        filterPanel.add(comboBoxBrand, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; filterPanel.add(brandField, gbc);
-        gbc.gridx = 1; gbc.gridy = 1; filterPanel.add(comboBoxBrand, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        filterPanel.add(lowerPriceField, gbc);
+        gbc.gridx = 1;
+        filterPanel.add(textFieldMinPrice, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2; filterPanel.add(lowerPriceField, gbc);
-        gbc.gridx = 1; gbc.gridy = 2; filterPanel.add(textFieldMinPrice, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        filterPanel.add(upperPriceField, gbc);
+        gbc.gridx = 1;
+        filterPanel.add(textFieldMaxPrice, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3; filterPanel.add(upperPriceField, gbc);
-        gbc.gridx = 1; gbc.gridy = 3; filterPanel.add(textFieldMaxPrice, gbc);
-
-        gbc.gridx = 2; gbc.gridy = 0; filterPanel.add(new JLabel("Sort By:"), gbc); // Sort by label
-        gbc.gridx = 3; gbc.gridy = 0; filterPanel.add(comboBoxSortedBy, gbc);
-
-
-        // ... (Add other filter components to the filterPanel) ...
-
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        filterPanel.add(new JLabel("Sort By:"), gbc);
+        gbc.gridx = 3;
+        filterPanel.add(comboBoxSortedBy, gbc);
 
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(applyFilterButton);
         buttonPanel.add(clearFilterButton);
 
         this.add(filterPanel, BorderLayout.NORTH);
-        this.add(new JScrollPane(productTable), BorderLayout.CENTER); // Add table in a scroll pane
+        this.add(new JScrollPane(productTable), BorderLayout.CENTER);
         this.add(buttonPanel, BorderLayout.SOUTH);
 
-
-
-        updateProductTable(); // Initial table population
+        updateProductTable();
     }
 
     public Product getSelectedProduct() {
         return this.selectedProduct;
     }
-
-
-
 }

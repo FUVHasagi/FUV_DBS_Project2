@@ -17,7 +17,7 @@ public class CashierMainScreenController implements ActionListener {
     private MySQL mySQL;
     private Redis redis;
 
-    public CashierMainScreenController(User cashier, MongoDB mongoDB, MySQL mySQL, Redis redis) {
+    public CashierMainScreenController(User cashier,  MySQL mySQL, MongoDB mongoDB, Redis redis) {
         this.cashier = cashier;
         this.mongoDB = mongoDB;
         this.mySQL = mySQL;
@@ -36,9 +36,9 @@ public class CashierMainScreenController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == view.getProductBrowseButton()) {
-            new CashierProductCheckController(mySQL); // Open product check
+            new CashierProductCheckController(cashier, mySQL, mongoDB); // Open product check
         } else if (e.getSource() == view.getNewOrderButton()) {
-            new CashierOrderController(cashier, mongoDB); // Open new order creation
+            new CashierOrderController(cashier, mySQL, mongoDB); // Open new order creation
         } else if (e.getSource() == view.getOrderHistoryButton()) {
             new CashierOrderHistoryController(cashier, mongoDB); // Open order history
         }
