@@ -7,7 +7,7 @@ import java.awt.*;
 import java.text.DecimalFormat;
 
 public class CartView extends JFrame {
-    private BrowseOrderLine browseOrderLine; // Use BrowseOrderLine
+    private BrowseOrderLine browseOrderLine;
     private JLabel totalCostLabel;
     private JButton deleteFromCartButton;
     private JButton changeQuantityButton;
@@ -21,7 +21,12 @@ public class CartView extends JFrame {
         setLayout(new BorderLayout());
 
         // Initialize components
+        initializeComponents();
+    }
+
+    private void initializeComponents() {
         browseOrderLine = new BrowseOrderLine();
+
         totalCostLabel = new JLabel("Total Cost: $0.00");
         totalCostLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         totalCostLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -30,27 +35,37 @@ public class CartView extends JFrame {
         changeQuantityButton = new JButton("Change Quantity");
         finishAndPayButton = new JButton("Finish & Pay");
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        buttonPanel.add(deleteFromCartButton);
-        buttonPanel.add(changeQuantityButton);
-        buttonPanel.add(finishAndPayButton);
-
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new BorderLayout());
-        bottomPanel.add(totalCostLabel, BorderLayout.EAST);
-        bottomPanel.add(buttonPanel, BorderLayout.CENTER);
+        JPanel buttonPanel = createButtonPanel();
+        JPanel bottomPanel = createBottomPanel(buttonPanel);
 
         // Add components to frame
         add(browseOrderLine, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
+    private JPanel createButtonPanel() {
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        buttonPanel.add(deleteFromCartButton);
+        buttonPanel.add(changeQuantityButton);
+        buttonPanel.add(finishAndPayButton);
+        return buttonPanel;
+    }
+
+    private JPanel createBottomPanel(JPanel buttonPanel) {
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(totalCostLabel, BorderLayout.EAST);
+        bottomPanel.add(buttonPanel, BorderLayout.CENTER);
+        return bottomPanel;
+    }
+
     // Getters for components
+    public JTable getOrderLineTable() {
+        return browseOrderLine.getOrderLineTable();
+    }
+
     public BrowseOrderLine getBrowseOrderLine() {
         return browseOrderLine;
     }
-
     public JLabel getTotalCostLabel() {
         return totalCostLabel;
     }

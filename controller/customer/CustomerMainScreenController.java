@@ -46,7 +46,7 @@ public class CustomerMainScreenController implements ActionListener {
             new CartController(user.getCustomer(), mongoDB);
         } else if (e.getSource() == view.getOrderHistoryButton()) {
             // Fetch and open order history
-            new OrderHistoryController(customerId, mongoDB);
+            new OrderHistoryController(user.getCustomer(), mongoDB);
         }
     }
 }

@@ -1,6 +1,10 @@
+// CustomerProductPanelController.java
 package controller.customer;
 
+import dataAccess.MongoDB;
+import dataAccess.MySQL;
 import model.Customer;
+import model.OrderLine;
 import model.Product;
 import view.customer.CustomerProductPanel;
 import view.layout.BrowseProduct;
@@ -12,10 +16,17 @@ import java.awt.event.ActionListener;
 public class CustomerProductPanelController implements ActionListener {
     private CustomerProductPanel view;
     private Customer customer;
+    private MySQL mySQL;
+    private MongoDB mongoDB;
 
-    public CustomerProductPanelController(Customer customer, BrowseProduct browseProduct) {
+    public CustomerProductPanelController(Customer customer, MySQL mySQL, MongoDB mongoDB) {
         this.customer = customer;
+        this.mySQL = mySQL;
+        this.mongoDB = mongoDB;
+
+        BrowseProduct browseProduct = new BrowseProduct(mySQL);
         this.view = new CustomerProductPanel(browseProduct);
+
         this.view.getAddToCartButton().addActionListener(this);
         this.view.getProductInfoButton().addActionListener(this);
 
@@ -25,22 +36,40 @@ public class CustomerProductPanelController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == view.getAddToCartButton()) {
-            // Add the selected product to the customer's cart
-            Product selectedProduct = ((BrowseProduct) view.getBrowserPanel()).getSelectedProduct();
-            if (selectedProduct != null) {
-                customer.getCart().addProduct(selectedProduct, 1); // Assuming `addProduct` method in `Cart` class
-                JOptionPane.showMessageDialog(view, "Product added to cart successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(view, "Please select a product first.", "Warning", JOptionPane.WARNING_MESSAGE);
-            }
+            addProductToCart();
         } else if (e.getSource() == view.getProductInfoButton()) {
-            // Open the product info view
-            Product selectedProduct = ((BrowseProduct) view.getBrowserPanel()).getSelectedProduct();
-            if (selectedProduct != null) {
-                new CustomerProductInfoController(selectedProduct);
-            } else {
-                JOptionPane.showMessageDialog(view, "Please select a product first.", "Warning", JOptionPane.WARNING_MESSAGE);
+            viewProductInfo();
+        }
+    }
+
+    private void addProductToCart() {
+        BrowseProduct browseProduct = (BrowseProduct) view.getBrowserPanel();
+        Product selectedProduct = browseProduct.getSelectedProduct();
+        if (selectedProduct != null) {
+            String quantityStr = JOptionPane.showInputDialog(view, "Enter quantity to add to cart:");
+            try {
+                int quantity = Integer.parseInt(quantityStr);
+                if (quantity > 0) {
+                    customer.getCart().addProduct(selectedProduct, quantity);
+                    JOptionPane.showMessageDialog(view, "Product added to cart successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(view, "Quantity must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(view, "Invalid quantity entered.", "Error", JOptionPane.ERROR_MESSAGE);
             }
+        } else {
+            JOptionPane.showMessageDialog(view, "Please select a product first.", "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void viewProductInfo() {
+        BrowseProduct browseProduct = (BrowseProduct) view.getBrowserPanel();
+        Product selectedProduct = browseProduct.getSelectedProduct();
+        if (selectedProduct != null) {
+            new CustomerProductInfoController(selectedProduct, customer, browseProduct);
+        } else {
+            JOptionPane.showMessageDialog(view, "Please select a product first.", "Warning", JOptionPane.WARNING_MESSAGE);
         }
     }
 }
