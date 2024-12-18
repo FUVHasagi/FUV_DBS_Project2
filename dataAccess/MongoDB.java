@@ -17,7 +17,6 @@ public class MongoDB {
         this.database = mongoClient.getDatabase("project2");
     }
 
-
     public MongoDatabase getDatabase() {
         return this.database;
     }
@@ -49,26 +48,48 @@ public class MongoDB {
     public void saveOrder(Order order) {
         MongoCollection<Document> collection = database.getCollection("orders");
         Document orderDoc = new Document("orderID", order.getOrderID())
-                .append("customerID", order.getCustomerID())
+                .append("sourceType", order.getSourceType()) // "customer" or "cashier"
+                .append("sourceID", order.getSourceID())     // Customer or Cashier ID
                 .append("orderDate", order.getOrderDate())
                 .append("totalCost", order.getTotalCost())
                 .append("orderLines", serializeOrderLines(order.getLines()));
+
+        // Add customerID only if it exists
+        if (order.getCustomerID() != null) {
+            orderDoc.append("customerID", order.getCustomerID());
+        }
+
         collection.insertOne(orderDoc);
     }
 
-    public List<Order> getOrdersByCustomerId(String customerId) {
+    public List<Order> getOrdersBySource(String sourceType, String sourceID) {
         MongoCollection<Document> collection = database.getCollection("orders");
         List<Order> orders = new ArrayList<>();
-        for (Document doc : collection.find(Filters.eq("customerID", customerId))) {
-            Order order = new Order();
-            order.setOrderID(doc.getString("orderID"));
-            order.setCustomerID(doc.getString("customerID"));
-            order.setOrderDate(doc.getString("orderDate"));
-            order.setTotalCost(doc.getDouble("totalCost"));
-            order.setLines(deserializeOrderLines((List<Document>) doc.get("orderLines")));
-            orders.add(order);
+
+        for (Document doc : collection.find(Filters.and(
+                Filters.eq("sourceType", sourceType),
+                Filters.eq("sourceID", sourceID)))) {
+            orders.add(deserializeOrder(doc));
         }
         return orders;
+    }
+
+    // Deserialize an Order
+    private Order deserializeOrder(Document doc) {
+        Order order = new Order();
+        order.setOrderID(doc.getString("orderID"));
+        order.setSourceType(doc.getString("sourceType"));
+        order.setSourceID(doc.getString("sourceID"));
+        order.setOrderDate(doc.getString("orderDate"));
+        order.setTotalCost(doc.getDouble("totalCost"));
+
+        // Set customerID only if it exists in the document
+        if (doc.containsKey("customerID")) {
+            order.setCustomerID(doc.getString("customerID"));
+        }
+
+        order.setLines(deserializeOrderLines((List<Document>) doc.get("orderLines")));
+        return order;
     }
 
     // --- Reviews Management ---
@@ -88,13 +109,12 @@ public class MongoDB {
         MongoCollection<Document> collection = database.getCollection("reviews");
         List<Review> reviews = new ArrayList<>();
         for (Document doc : collection.find(Filters.eq("productID", productId))) {
-            Review review = new Review(
+            reviews.add(new Review(
                     doc.getInteger("productID"),
                     doc.getString("customerID"),
                     doc.getDouble("rating"),
                     doc.getString("comment")
-            );
-            reviews.add(review);
+            ));
         }
         return reviews;
     }

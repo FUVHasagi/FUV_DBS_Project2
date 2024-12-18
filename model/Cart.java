@@ -24,11 +24,9 @@ public class Cart {
         }
     }
 
-    // Remove an item from the cart
-    public void removeItem(OrderLine orderLine) {
-        if (orderLine != null) {
-            items.remove(orderLine.getProductID());
-        }
+    // Updated removeItem to accept productID directly
+    public void removeItem(int productID) {
+        items.remove(productID);
     }
 
     // Clear all items from the cart
@@ -50,8 +48,8 @@ public class Cart {
         return items;
     }
 
-    public void addProduct(Product selectedProduct, int i) {
-        OrderLine temp = OrderLine.createFromProduct(selectedProduct, i);
+    public void addProduct(Product selectedProduct, int quantity) {
+        OrderLine temp = OrderLine.createFromProduct(selectedProduct, quantity);
         addItem(temp);
     }
 }

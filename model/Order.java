@@ -4,21 +4,16 @@ import java.util.List;
 
 public class Order {
     private String orderID;
-    private String customerID;
-    private String customerName;
+    private String customerID;  // Optional: Nullable for orders without a customer
+    private String customerName;  // Optional: Useful if customer info exists
     private String orderDate;
     private List<OrderLine> lines;
-    private float totalCost;
+    private double totalCost;
+
+    private String sourceType;  // "customer" or "cashier"
+    private String sourceID;    // The ID of the customer or cashier who created the order
 
     // Getters and Setters
-    public String getOrderID() {
-        return orderID;
-    }
-
-    public void setOrderID(String orderID) {
-        this.orderID = orderID;
-    }
-
     public String getCustomerID() {
         return customerID;
     }
@@ -33,6 +28,30 @@ public class Order {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public String getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(String sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public String getSourceID() {
+        return sourceID;
+    }
+
+    public void setSourceID(String sourceID) {
+        this.sourceID = sourceID;
+    }
+
+    public String getOrderID() {
+        return orderID;
+    }
+
+    public void setOrderID(String orderID) {
+        this.orderID = orderID;
     }
 
     public String getOrderDate() {
@@ -52,7 +71,7 @@ public class Order {
         calculateTotalCost();
     }
 
-    public float getTotalCost() {
+    public double getTotalCost() {
         return totalCost;
     }
 
@@ -63,19 +82,8 @@ public class Order {
         }
     }
 
-    @Override
-    public String toString() {
-        return "Order{" +
-                "orderID='" + orderID + '\'' +
-                ", customerID='" + customerID + '\'' +
-                ", customerName='" + customerName + '\'' +
-                ", orderDate='" + orderDate + '\'' +
-                ", lines=" + lines +
-                ", totalCost=" + totalCost +
-                '}';
-    }
+    public void setTotalCost(Double totalCost) {
+        this.totalCost=totalCost;
 
-    public void setTotalCost(double totalCost) {
-        this.totalCost = (float) totalCost;
     }
 }

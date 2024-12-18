@@ -44,7 +44,7 @@ public class Application {
 
             // Initialize LoginView and Controller
             LoginView loginView = new LoginView();
-            new LoginController(loginView, mySQL, mongoDB);
+            new LoginController(loginView, mySQL, mongoDB, redis);
 
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Failed to connect to MySQL: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

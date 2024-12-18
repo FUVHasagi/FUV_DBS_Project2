@@ -1,5 +1,10 @@
 package model;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 public class Customer {
     private String fullName;
     private String id;
@@ -33,6 +38,10 @@ public class Customer {
         return cart;
     }
 
+    public void setCart(Cart cart) {
+        this.cart = cart;
+    }
+
     // Cart Operations
     public void addItemToCart(OrderLine orderLine) {
         if (orderLine != null) {
@@ -42,7 +51,7 @@ public class Customer {
 
     public void removeItemFromCart(OrderLine orderLine) {
         if (orderLine != null) {
-            cart.removeItem(orderLine);
+            cart.removeItem(orderLine.getProductID());
         }
     }
 
@@ -50,10 +59,34 @@ public class Customer {
         cart.clear();
     }
 
-    public void setCart(Cart cart) {
-        this.cart = cart;
-    }
     public double calculateTotal() {
         return cart.calculateTotal();
+    }
+
+    // Method to create an Order
+    public Order createOrder() {
+        if (cart.getItems().isEmpty()) {
+            throw new IllegalStateException("Cart is empty. Cannot create order.");
+        }
+
+        Order order = new Order();
+        order.setOrderID(generateOrderID());
+        order.setCustomerID(this.id);
+        order.setCustomerName(this.fullName);
+        order.setOrderDate(generateOrderDate());
+        order.setLines(new ArrayList<>(cart.getItems().values()));
+        order.setTotalCost(cart.calculateTotal());
+        return order;
+    }
+
+    // Helper method to generate a unique order ID
+    private String generateOrderID() {
+        return "ORD-" + System.currentTimeMillis(); // Example: Unique ID based on timestamp
+    }
+
+    // Helper method to get the current date in a specific format
+    private String generateOrderDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return sdf.format(new Date());
     }
 }

@@ -5,12 +5,10 @@ import controller.customer.CustomerMainScreenController;
 import controller.manager.ManagerMainScreenController;
 import dataAccess.MySQL;
 import dataAccess.MongoDB;
+import dataAccess.Redis;
 import model.Customer;
 import model.User;
 import view.LoginView;
-import view.cashier.CashierMainScreen;
-import view.customer.CustomerMainScreen;
-import view.manager.ManagerMainScreen;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -20,11 +18,13 @@ public class LoginController {
     private LoginView loginView;
     private MySQL mySQL;
     private MongoDB mongoDB;
+    private Redis redis;
 
-    public LoginController(LoginView loginView, MySQL mySQL, MongoDB mongoDB) {
+    public LoginController(LoginView loginView, MySQL mySQL, MongoDB mongoDB, Redis redis) {
         this.loginView = loginView;
         this.mySQL = mySQL;
         this.mongoDB = mongoDB;
+        this.redis = redis;
 
         // Show the login view
         this.loginView.setVisible(true);
@@ -50,20 +50,21 @@ public class LoginController {
 
             switch (role) {
                 case "customer":
-                    // Fetch associated Customer from MongoDB
-                    Customer customer = mongoDB.getCustomerById(user.getCustomer().getId());
+                    // Fetch associated Customer ID from MongoDB
+                    String customerId = user.getCustomer().getId();
+                    Customer customer = mongoDB.getCustomerById(customerId);
                     if (customer != null) {
-                        user.setCustomer(customer); // Associate the retrieved customer with the user
-                        new CustomerMainScreenController(customer); // Open CustomerMainScreen
+                        user.setCustomer(customer);
+                        new CustomerMainScreenController(user, customerId, mySQL, mongoDB, redis);
                     } else {
                         JOptionPane.showMessageDialog(loginView, "Customer not found in the database.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     break;
                 case "cashier":
-                    new CashierMainScreenController(new CashierMainScreen()); // Open CashierMainScreen
+                    new CashierMainScreenController(user, mySQL, mongoDB, redis);
                     break;
                 case "manager":
-                    new ManagerMainScreenController(new ManagerMainScreen()); // Open ManagerMainScreen
+                    new ManagerMainScreenController(user, mySQL, mongoDB, redis);
                     break;
                 default:
                     JOptionPane.showMessageDialog(loginView, "Unknown user role: " + role, "Error", JOptionPane.ERROR_MESSAGE);

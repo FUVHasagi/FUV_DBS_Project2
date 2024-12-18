@@ -13,4 +13,5 @@ public class CashierOrder {
     private JButton finishAndPayButton;
     private JButton changeProductButton;
     private JPanel buttonOrderPanel;
+    private JButton addCustomerButton;
 }
