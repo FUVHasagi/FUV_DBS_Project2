@@ -3,7 +3,6 @@ package controller.customer;
 import dataAccess.MySQL;
 import dataAccess.MongoDB;
 import dataAccess.Redis;
-import model.Customer;
 import model.User;
 import view.customer.CustomerMainScreen;
 
@@ -46,7 +45,7 @@ public class CustomerMainScreenController implements ActionListener {
             new CartController(user.getCustomer(), mongoDB);
         } else if (e.getSource() == view.getOrderHistoryButton()) {
             // Fetch and open order history
-            new OrderHistoryController(user.getCustomer(), mongoDB);
+            new CustomerOrderHistoryController(user.getCustomer(), mongoDB);
         }
     }
 }

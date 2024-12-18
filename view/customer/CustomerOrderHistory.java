@@ -1,19 +1,15 @@
 package view.customer;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-public class OrderHistory extends JFrame {
+public class CustomerOrderHistory extends JFrame {
     private JPanel panel;
     private JTable table;
     private JScrollPane jScrollPane1;
     private JButton inspectOrderButton;
     private JButton button2;
 
-    public OrderHistory() {
+    public CustomerOrderHistory() {
         setTitle("Order Table View");
         setSize(800, 600);
         setLocationRelativeTo(null);

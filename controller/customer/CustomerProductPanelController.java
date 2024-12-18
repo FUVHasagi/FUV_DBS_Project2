@@ -4,7 +4,6 @@ package controller.customer;
 import dataAccess.MongoDB;
 import dataAccess.MySQL;
 import model.Customer;
-import model.OrderLine;
 import model.Product;
 import view.customer.CustomerProductPanel;
 import view.layout.BrowseProduct;
@@ -36,13 +35,13 @@ public class CustomerProductPanelController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == view.getAddToCartButton()) {
-            addProductToCart();
+            handleAddToCart();
         } else if (e.getSource() == view.getProductInfoButton()) {
-            viewProductInfo();
+            handleViewProductInfo();
         }
     }
 
-    private void addProductToCart() {
+    private void handleAddToCart() {
         BrowseProduct browseProduct = (BrowseProduct) view.getBrowserPanel();
         Product selectedProduct = browseProduct.getSelectedProduct();
         if (selectedProduct != null) {
@@ -63,11 +62,11 @@ public class CustomerProductPanelController implements ActionListener {
         }
     }
 
-    private void viewProductInfo() {
+    private void handleViewProductInfo() {
         BrowseProduct browseProduct = (BrowseProduct) view.getBrowserPanel();
         Product selectedProduct = browseProduct.getSelectedProduct();
         if (selectedProduct != null) {
-            new CustomerProductInfoController(selectedProduct, customer, browseProduct);
+            new CustomerProductInfoController(selectedProduct, customer, this.mongoDB);
         } else {
             JOptionPane.showMessageDialog(view, "Please select a product first.", "Warning", JOptionPane.WARNING_MESSAGE);
         }
