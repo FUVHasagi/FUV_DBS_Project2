@@ -18,7 +18,7 @@ public class ProductInformation extends JPanel {
 
         add(new JLabel("Product ID:"));
         fieldID = new JTextField();
-        fieldID.setEditable(false); // ID is always non-editable
+//        fieldID.setEditable(false); // ID is always non-editable
         add(fieldID);
 
         add(new JLabel("Name:"));

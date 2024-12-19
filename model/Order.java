@@ -86,4 +86,8 @@ public class Order {
         this.totalCost=totalCost;
 
     }
+
+    public void addOrderLine(OrderLine fromProduct) {
+    }
+
 }

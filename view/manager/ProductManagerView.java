@@ -72,4 +72,6 @@ public class ProductManagerView extends JFrame {
     public ProductInformation getProductInformationPanel() {
         return productInformationPanel;
     }
+
+
 }

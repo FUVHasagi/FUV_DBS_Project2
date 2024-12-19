@@ -10,8 +10,9 @@ public class ManagerMainScreen extends JFrame {
 
     public ManagerMainScreen() {
         setTitle("Manager Main Screen");
+//        setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 400);
+        setSize(400, 300);
         setLocationRelativeTo(null);
         initializeComponents();
     }
@@ -24,7 +25,7 @@ public class ManagerMainScreen extends JFrame {
 
         // Layout for buttons
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(3, 1, 10, 10));
+//        buttonPanel.setLayout(new GridLayout(3, 1, 10, 10));
         buttonPanel.add(stockManagementButton);
         buttonPanel.add(reportButton);
         buttonPanel.add(orderManagementButton);

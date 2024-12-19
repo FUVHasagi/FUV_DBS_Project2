@@ -26,6 +26,7 @@ public class CashierOrderView extends JFrame {
 
         productInfoPanel = new ProductInformation();
         orderLinePanel = new BrowseOrderLine();
+        productInfoPanel.setEditable(false);
 
         addProductButton = new JButton("Add Product");
         deleteProductButton = new JButton("Delete Product");

@@ -11,7 +11,7 @@ public class CustomerMainScreen extends JFrame {
 
     public CustomerMainScreen() {
         setTitle("Customer Dashboard");
-        setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
+//        setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 300);
 

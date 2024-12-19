@@ -10,6 +10,7 @@ public class CashierMainScreen extends JFrame {
 
     public CashierMainScreen() {
         setTitle("Cashier Dashboard");
+//        setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -27,8 +28,8 @@ public class CashierMainScreen extends JFrame {
         newOrderButton = new JButton("New Order");
         orderHistoryButton = new JButton("Order History");
 
-        JPanel buttonPanel = new JPanel(new GridLayout(3, 1, 10, 10));
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+        JPanel buttonPanel = new JPanel();
+//        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         buttonPanel.add(productBrowseButton);
         buttonPanel.add(newOrderButton);
         buttonPanel.add(orderHistoryButton);
