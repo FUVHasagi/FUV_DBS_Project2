@@ -26,6 +26,9 @@ public class CashierProductCheckController implements ActionListener {
         initializeListeners();
 
         view.setVisible(true);
+
+        // Ensure products are loaded on initialization
+        browseProductPanel.updateProductTable();
     }
 
     private void initializeListeners() {
@@ -41,6 +44,7 @@ public class CashierProductCheckController implements ActionListener {
 
     private void handleInspectProduct() {
         Product selectedProduct = browseProductPanel.getSelectedProduct();
+        System.out.println(selectedProduct);
         if (selectedProduct != null) {
             // Call the CashierProductInfo view or controller
             new CashierProductInfoController(selectedProduct, mySQL);

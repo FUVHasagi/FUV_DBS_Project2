@@ -23,6 +23,7 @@ public class CartController implements ActionListener {
     public CartController(Customer customer, MongoDB mongoDB, MySQL mySQL) {
         this.customer = customer;
         this.mongoDB = mongoDB;
+        this.mySQL = mySQL;
 
         this.view = new CartView();
         populateCartTable();

@@ -46,6 +46,17 @@ public class CashierOrderController implements ActionListener {
         view.getAddCustomerButton().addActionListener(this);
     }
 
+    // Helper method to generate a unique order ID
+    private String generateOrderID() {
+        return "ORD-" + System.currentTimeMillis(); // Example: Unique ID based on timestamp
+    }
+
+    // Helper method to get the current date in a specific format
+    private String generateOrderDate() {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return sdf.format(new java.util.Date());
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == view.getAddProductButton()) {
@@ -89,6 +100,7 @@ public class CashierOrderController implements ActionListener {
 
             // Update quantity in the Map
             productQuantityMap.merge(product.getId(), quantity, Integer::sum);
+
             updateOrderLinesTable();
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(view, "Invalid quantity. Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -126,6 +138,7 @@ public class CashierOrderController implements ActionListener {
             return;
         }
 
+        // Verify stock availability
         for (Map.Entry<Integer, Integer> entry : productQuantityMap.entrySet()) {
             if (!mySQL.isStockSufficient(entry.getKey(), entry.getValue())) {
                 JOptionPane.showMessageDialog(view,
@@ -136,44 +149,97 @@ public class CashierOrderController implements ActionListener {
             }
         }
 
-        // Ensure the customer exists in the database
-        Customer customer = mongoDB.ensureCustomerExists(customerId, "Unknown", false);
-
+        // Create a new order
         Order order = new Order();
+        order.setOrderID(generateOrderID()); // Generate a unique order ID
         order.setSourceType("cashier");
         order.setSourceID(String.valueOf(cashier.getId()));
-        order.setCustomerID(customerId);
+        order.setCustomerID(customerId != null ? customerId : ""); // Handle null customer ID
+        order.setOrderDate(generateOrderDate()); // Generate the current timestamp
+        order.setLines(new ArrayList<>()); // Ensure lines is initialized
 
-        // Convert Map to OrderLine list
+        // Populate order lines and reduce stock
         for (Map.Entry<Integer, Integer> entry : productQuantityMap.entrySet()) {
             Product product = mySQL.getProductById(entry.getKey());
             if (product != null) {
-                order.addOrderLine(OrderLine.createFromProduct(product, entry.getValue()));
-                // Reduce stock for the product
+                OrderLine orderLine = OrderLine.createFromProduct(product, entry.getValue());
+                order.getLines().add(orderLine); // Add to the order's lines
                 mySQL.reduceProductStock(product.getId(), entry.getValue());
             }
         }
 
+        // Calculate total cost
+        double totalCost = order.getLines().stream()
+                .mapToDouble(OrderLine::getCost)
+                .sum();
+        order.setTotalCost(totalCost);
+
+        // Save the order in MongoDB
         mongoDB.saveOrder(order);
 
-        JOptionPane.showMessageDialog(view, "Order placed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        // Show success message and clear the order
+        JOptionPane.showMessageDialog(view, "Order placed successfully! Order ID: " + order.getOrderID(), "Success", JOptionPane.INFORMATION_MESSAGE);
         handleClearOrder();
     }
+
+
 
 
     private void handleChangeProduct() {
         int selectedProductId = view.getOrderLinePanel().getSelectedProductID();
         if (selectedProductId != -1) {
-            Product product = view.getProductInfoPanel().getProduct();
-            orderLines.removeIf(orderLine -> orderLine.getProductID() == selectedProductId);
             try {
-                int quantity = Integer.parseInt(JOptionPane.showInputDialog(view, "Enter Quantity:"));
-                OrderLine orderLine = OrderLine.createFromProduct(product, quantity);
-                orderLines.add(orderLine);
+                // Prompt for new Product ID with default value as the current Product ID
+                String newProductIdInput = JOptionPane.showInputDialog(view,
+                        "Enter new Product ID:",
+                        String.valueOf(selectedProductId)
+                );
+                if (newProductIdInput == null || newProductIdInput.trim().isEmpty()) {
+                    return; // User cancelled or entered no value
+                }
+
+                int newProductId = Integer.parseInt(newProductIdInput.trim());
+                Product newProduct = mySQL.getProductById(newProductId);
+
+                if (newProduct == null) {
+                    JOptionPane.showMessageDialog(view, "Product not found.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Prompt for new quantity with default value as the current quantity
+                int currentQuantity = productQuantityMap.getOrDefault(selectedProductId, 0);
+                String newQuantityInput = JOptionPane.showInputDialog(view,
+                        "Enter new Quantity:",
+                        String.valueOf(currentQuantity)
+                );
+                if (newQuantityInput == null || newQuantityInput.trim().isEmpty()) {
+                    return; // User cancelled or entered no value
+                }
+
+                int newQuantity = Integer.parseInt(newQuantityInput.trim());
+                if (newQuantity <= 0) {
+                    JOptionPane.showMessageDialog(view, "Quantity must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (!mySQL.isStockSufficient(newProductId, newQuantity)) {
+                    JOptionPane.showMessageDialog(view,
+                            "Insufficient stock for product: " + newProduct.getName(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Update the productQuantityMap
+                productQuantityMap.remove(selectedProductId); // Remove old product ID
+                productQuantityMap.put(newProductId, newQuantity); // Add new product ID with new quantity
+
                 updateOrderLinesTable();
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(view, "Invalid Quantity.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(view, "Invalid input. Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
             }
+        } else {
+            JOptionPane.showMessageDialog(view, "No product selected. Please select a product first.", "Warning", JOptionPane.WARNING_MESSAGE);
         }
     }
 
@@ -183,6 +249,20 @@ public class CashierOrderController implements ActionListener {
     }
 
     private void updateOrderLinesTable() {
+        // Clear the current orderLines list and rebuild it from the productQuantityMap
+        orderLines.clear();
+        for (Map.Entry<Integer, Integer> entry : productQuantityMap.entrySet()) {
+            int productId = entry.getKey();
+            int quantity = entry.getValue();
+            Product product = mySQL.getProductById(productId);
+            if (product != null) {
+                OrderLine orderLine = OrderLine.createFromProduct(product, quantity);
+                orderLines.add(orderLine);
+            }
+        }
+
+        // Update the table with the new orderLines list
         view.getOrderLinePanel().setTableData(orderLines);
     }
+
 }

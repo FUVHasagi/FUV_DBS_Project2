@@ -9,7 +9,7 @@ public class ManagerReportView extends JFrame {
     private JTable tableBestSellingCategories;
     private JTable tableMostIncomeProducts;
     private JTable tableMostIncomeCustomers;
-    private JButton backButton;
+    private JButton refreshButton;
 
     public ManagerReportView() {
         setTitle("Manager Report");
@@ -17,33 +17,44 @@ public class ManagerReportView extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Initialize tables
-        tableBestSellingProducts = createTable("Best Selling Products");
-        tableBestSellingCategories = createTable("Best Selling Categories");
-        tableMostIncomeProducts = createTable("Most Income Products");
-        tableMostIncomeCustomers = createTable("Most Income Customers");
+        JTabbedPane tabbedPane = new JTabbedPane();
 
-        // Create panels
-        JPanel tablePanel = new JPanel(new GridLayout(4, 1, 10, 10));
-        tablePanel.add(new JScrollPane(tableBestSellingProducts));
-        tablePanel.add(new JScrollPane(tableBestSellingCategories));
-        tablePanel.add(new JScrollPane(tableMostIncomeProducts));
-        tablePanel.add(new JScrollPane(tableMostIncomeCustomers));
+        // Panels for each report category
+        tabbedPane.addTab("Best Selling Products", createTablePanel("Product", "Total Quantity"));
+        tabbedPane.addTab("Best Selling Categories", createTablePanel("Category", "Total Quantity"));
+        tabbedPane.addTab("Most Income Products", createTablePanel("Product", "Total Income"));
+        tabbedPane.addTab("Most Income Customers", createTablePanel("Customer", "Total Spent"));
 
-        // Back button
-        backButton = new JButton("Back");
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.add(backButton);
+        // Refresh button
+        refreshButton = new JButton("Refresh");
 
-        // Add components to frame
-        add(tablePanel, BorderLayout.CENTER);
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(refreshButton);
+
+        add(tabbedPane, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
+
+        setVisible(true);
     }
 
-    private JTable createTable(String title) {
-        JTable table = new JTable(new DefaultTableModel(new Object[]{"Rank", title, "Value"}, 0));
-        table.setEnabled(false);
-        return table;
+    private JPanel createTablePanel(String labelHeader, String valueHeader) {
+        JPanel panel = new JPanel(new BorderLayout());
+        JTable table = new JTable(new DefaultTableModel(new String[]{"Rank", labelHeader, valueHeader}, 0));
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // Assign table to appropriate field
+        if (labelHeader.equals("Product") && valueHeader.equals("Total Quantity")) {
+            tableBestSellingProducts = table;
+        } else if (labelHeader.equals("Category") && valueHeader.equals("Total Quantity")) {
+            tableBestSellingCategories = table;
+        } else if (labelHeader.equals("Product") && valueHeader.equals("Total Income")) {
+            tableMostIncomeProducts = table;
+        } else if (labelHeader.equals("Customer") && valueHeader.equals("Total Spent")) {
+            tableMostIncomeCustomers = table;
+        }
+
+        return panel;
     }
 
     public JTable getTableBestSellingProducts() {
@@ -62,7 +73,7 @@ public class ManagerReportView extends JFrame {
         return tableMostIncomeCustomers;
     }
 
-    public JButton getBackButton() {
-        return backButton;
+    public JButton getRefreshButton() {
+        return refreshButton;
     }
 }

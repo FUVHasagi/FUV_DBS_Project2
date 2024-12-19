@@ -5,6 +5,8 @@ import model.Product;
 import view.cashier.CashierProductInfoView;
 import view.layout.ProductInformation;
 
+import javax.swing.*;
+
 public class CashierProductInfoController {
     private CashierProductInfoView view;
     private Product product;
@@ -18,9 +20,11 @@ public class CashierProductInfoController {
         ProductInformation productInfoPanel = new ProductInformation();
         productInfoPanel.setProduct(product);
         productInfoPanel.setEditable(false); // Ensure the panel is read-only for the cashier
+        productInfoPanel.getFieldID().setEditable(false);
 
         // Initialize the view
         this.view = new CashierProductInfoView(productInfoPanel);
         this.view.setVisible(true);
+
     }
 }

@@ -99,8 +99,6 @@ public class CustomerProductInfoController implements ActionListener {
             OrderLine orderLine = OrderLine.createFromProduct(product, quantity);
             customer.addItemToCart(orderLine);
 
-            // Reduce stock in the database
-            mySQL.reduceProductStock(product.getId(), quantity);
 
             JOptionPane.showMessageDialog(view, "Product added to cart successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (IllegalArgumentException ex) {

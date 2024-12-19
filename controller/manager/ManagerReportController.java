@@ -14,48 +14,42 @@ import java.util.List;
 public class ManagerReportController implements ActionListener {
     private ManagerReportView view;
     private Redis redis;
-    private MongoDB mongoDB;
 
     public ManagerReportController(Redis redis, MongoDB mongoDB) {
         this.redis = redis;
-        this.mongoDB = mongoDB;
         this.view = new ManagerReportView();
 
-        // Load report data
         loadReportData();
-
-        // Add action listeners
-        view.getBackButton().addActionListener(this);
-
-        // Display the view
+        view.getRefreshButton().addActionListener(this);
         view.setVisible(true);
     }
 
     private void loadReportData() {
-        populateTable(view.getTableBestSellingProducts(), redis.getTopSellingProducts(), "Product", "totalQuantity");
-        populateTable(view.getTableBestSellingCategories(), redis.getTopSellingCategories(), "Category", "totalQuantity");
-        populateTable(view.getTableMostIncomeProducts(), redis.getTopIncomeProducts(), "Product", "totalIncome");
-        populateTable(view.getTableMostIncomeCustomers(), redis.getTopIncomeCustomers(), "Customer", "totalSpent");
+        populateTable(view.getTableBestSellingProducts(), redis.getTopSellingProducts(), "productID", "totalQuantity");
+        populateTable(view.getTableBestSellingCategories(), redis.getTopSellingCategories(), "category", "totalQuantity");
+        populateTable(view.getTableMostIncomeProducts(), redis.getTopIncomeProducts(), "productID", "totalIncome");
+        populateTable(view.getTableMostIncomeCustomers(), redis.getTopIncomeCustomers(), "customerID", "totalSpent");
     }
 
     private void populateTable(JTable table, List<Document> data, String labelField, String valueField) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setRowCount(0); // Clear existing rows
+        model.setRowCount(0);
 
         int rank = 1;
         for (Document doc : data) {
-            model.addRow(new Object[]{
-                    rank++,
-                    doc.get(labelField),
-                    doc.get(valueField)
-            });
+            model.addRow(new Object[]{rank++, doc.getString(labelField), doc.get(valueField)});
         }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == view.getBackButton()) {
-            view.dispose(); // Close the report view
+        if (e.getSource() == view.getRefreshButton()) {
+            redis.reloadCache("top_selling_products");
+            redis.reloadCache("top_selling_categories");
+            redis.reloadCache("top_income_products");
+            redis.reloadCache("top_income_customers");
+            loadReportData();
+            JOptionPane.showMessageDialog(view, "Report data refreshed.", "Info", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 }

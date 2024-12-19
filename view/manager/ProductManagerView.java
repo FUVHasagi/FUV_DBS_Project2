@@ -26,10 +26,23 @@ public class ProductManagerView extends JFrame {
     }
 
     private void initializeComponents() {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
-        // Initialize buttons
+        // Product Information Panel
+        JPanel productInfoPanel = new JPanel(new BorderLayout());
+        productInfoPanel.setBorder(BorderFactory.createTitledBorder("Product Information"));
+        productInfoPanel.add(productInformationPanel, BorderLayout.CENTER);
+        productInformationPanel.getFieldID().setEditable(false);
+
+
+        // Browse Product Panel
+        JPanel browsePanel = new JPanel(new BorderLayout());
+        browsePanel.setBorder(BorderFactory.createTitledBorder("Browse Products"));
+        browsePanel.add(new JScrollPane(browseProductPanel), BorderLayout.CENTER);
+
+        // Button Panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         addProductButton = new JButton("Add Product");
         loadProductButton = new JButton("Load Product");
         changeProductButton = new JButton("Change Product");
@@ -40,10 +53,13 @@ public class ProductManagerView extends JFrame {
         buttonPanel.add(changeProductButton);
         buttonPanel.add(deleteProductButton);
 
-        // Add subpanels and button panel to the main panel
-        mainPanel.add(new JScrollPane(browseProductPanel), BorderLayout.CENTER);
-        mainPanel.add(productInformationPanel, BorderLayout.EAST);
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add subpanels to the main panel
+        mainPanel.add(productInfoPanel);
+        mainPanel.add(Box.createVerticalStrut(10)); // Add spacing
+        mainPanel.add(browsePanel);
+        mainPanel.add(Box.createVerticalStrut(10)); // Add spacing
+        mainPanel.add(buttonPanel);
 
         // Add main panel to frame
         add(mainPanel);
@@ -72,6 +88,4 @@ public class ProductManagerView extends JFrame {
     public ProductInformation getProductInformationPanel() {
         return productInformationPanel;
     }
-
-
 }

@@ -44,12 +44,22 @@ public class CustomerProductPanelController implements ActionListener {
     private void handleAddToCart() {
         BrowseProduct browseProduct = (BrowseProduct) view.getBrowserPanel();
         Product selectedProduct = browseProduct.getSelectedProduct();
+
         if (selectedProduct != null) {
             String quantityStr = JOptionPane.showInputDialog(view, "Enter quantity to add to cart:");
             try {
                 int quantity = Integer.parseInt(quantityStr);
+
                 if (quantity > 0) {
+                    // Check stock availability
+                    if (!mySQL.isStockSufficient(selectedProduct.getId(), quantity)) {
+                        JOptionPane.showMessageDialog(view, "Insufficient stock available.", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
                     customer.getCart().addProduct(selectedProduct, quantity);
+
+
                     JOptionPane.showMessageDialog(view, "Product added to cart successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     JOptionPane.showMessageDialog(view, "Quantity must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);

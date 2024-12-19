@@ -8,13 +8,13 @@ import java.awt.*;
 public class CashierProductInfoView extends JFrame {
     private ProductInformation panelProduct;
 
-    public CashierProductInfoView(JPanel panelProduct) {
+    public CashierProductInfoView(ProductInformation panelProduct) {
         this.setTitle("Product Information");
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(800, 600);
         this.setLayout(new BorderLayout());
 
-        this.panelProduct = new ProductInformation();
+        this.panelProduct = panelProduct;
         initializeComponents();
     }
 

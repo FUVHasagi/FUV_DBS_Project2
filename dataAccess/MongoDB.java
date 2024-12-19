@@ -54,8 +54,8 @@ public class MongoDB {
         MongoCollection<Document> ordersCollection = database.getCollection("orders");
         MongoCollection<Document> customersCollection = database.getCollection("customers");
 
-        // Check if the customer exists and has a valid ID
-        if (order.getCustomerID() != null) {
+        // Handle customer-related logic only if a customer ID is provided
+        if (order.getCustomerID() != null && !order.getCustomerID().isEmpty()) {
             Document customerDoc = customersCollection.find(Filters.eq("id", order.getCustomerID())).first();
             if (customerDoc == null) {
                 throw new IllegalArgumentException("Customer ID not found: " + order.getCustomerID());
@@ -79,19 +79,20 @@ public class MongoDB {
         }
 
         // Save the order
-        Document orderDoc = new Document("orderID", order.getOrderID())
+        Document orderDoc = new Document("orderID", order.getOrderID()) // Save order ID
                 .append("sourceType", order.getSourceType())
                 .append("sourceID", order.getSourceID())
                 .append("orderDate", order.getOrderDate())
                 .append("totalCost", order.getTotalCost())
                 .append("orderLines", serializeOrderLines(order.getLines()));
 
-        if (order.getCustomerID() != null) {
+        if (order.getCustomerID() != null && !order.getCustomerID().isEmpty()) {
             orderDoc.append("customerID", order.getCustomerID());
         }
 
         ordersCollection.insertOne(orderDoc);
     }
+
 
 
     public List<Order> getOrdersBySource(String sourceType, String sourceID, boolean forCustomer) {
@@ -258,6 +259,10 @@ public class MongoDB {
     }
 
     public Customer ensureCustomerExists(String customerId, String displayName, boolean createNewCustomer) {
+        if (customerId == null || customerId.trim().isEmpty() || displayName == null || displayName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Customer ID and display name must not be null or empty.");
+        }
+
         MongoCollection<Document> customersCollection = database.getCollection("customers");
 
         // Check if the customer already exists
@@ -275,8 +280,10 @@ public class MongoDB {
                 customer.setBoughtProducts(new HashSet<>(boughtProducts));
             }
 
+            System.out.println("Returning existing customer: " + customerId);
             return customer;
         }
+
         if (createNewCustomer) {
             // Create a new customer if not found
             Customer newCustomer = new Customer(displayName, customerId);
@@ -286,11 +293,19 @@ public class MongoDB {
             Document newCustomerDoc = new Document("id", customerId)
                     .append("fullName", displayName)
                     .append("boughtProducts", new ArrayList<>());
-            customersCollection.insertOne(newCustomerDoc);
 
-            return newCustomer;
+            try {
+                customersCollection.insertOne(newCustomerDoc);
+                System.out.println("New customer created: " + customerId);
+                return newCustomer;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("Failed to create new customer.", e);
+            }
+        } else {
+            System.out.println("Null Customer (creation not allowed): " + customerId);
+            return null;
         }
-        else return null;
     }
 
     public boolean hasCustomerBoughtProduct(String customerId, int productId) {

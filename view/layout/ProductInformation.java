@@ -65,6 +65,7 @@ public class ProductInformation extends JPanel {
     public Product getProduct() {
         try {
             int id = Integer.parseInt(fieldID.getText().trim());
+
             String name = fieldName.getText().trim();
             String category = fieldCategory.getText().trim();
             double price = Double.parseDouble(fieldPrice.getText().trim());
