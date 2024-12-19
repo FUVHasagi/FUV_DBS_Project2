@@ -66,7 +66,7 @@ public class CustomerProductPanelController implements ActionListener {
         BrowseProduct browseProduct = (BrowseProduct) view.getBrowserPanel();
         Product selectedProduct = browseProduct.getSelectedProduct();
         if (selectedProduct != null) {
-            new CustomerProductInfoController(selectedProduct, customer, this.mongoDB);
+            new CustomerProductInfoController(selectedProduct, customer, this.mongoDB, mySQL);
         } else {
             JOptionPane.showMessageDialog(view, "Please select a product first.", "Warning", JOptionPane.WARNING_MESSAGE);
         }

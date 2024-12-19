@@ -42,10 +42,10 @@ public class CustomerMainScreenController implements ActionListener {
             new CustomerProductPanelController(user.getCustomer(), mySQL, mongoDB);
         } else if (e.getSource() == view.getCartButton()) {
             // Open cart view
-            new CartController(user.getCustomer(), mongoDB);
+            new CartController(user.getCustomer(), mongoDB, mySQL);
         } else if (e.getSource() == view.getOrderHistoryButton()) {
             // Fetch and open order history
-            new CustomerOrderHistoryController(user.getCustomer(), mongoDB);
+            new CustomerOrderHistoryController(user.getCustomer(), mongoDB, mySQL);
         }
     }
 }

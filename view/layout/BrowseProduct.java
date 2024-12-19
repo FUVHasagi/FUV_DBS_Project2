@@ -24,9 +24,8 @@ public class BrowseProduct extends JPanel {
     private JTextField textFieldMaxPrice;
     private JButton applyFilterButton;
     private JButton clearFilterButton;
-    private JTextField fieldID;
-    private DefaultTableModel tableModel;
     private Product selectedProduct;
+    private DefaultTableModel tableModel;
     private MySQL mySQL;
 
     public BrowseProduct(MySQL mySQL) {
@@ -37,19 +36,27 @@ public class BrowseProduct extends JPanel {
     private void populateComboBoxes() {
         try {
             Vector<String> categories = mySQL.getUniqueValues("Category");
+            comboBoxCategory.addItem(""); // Add empty value for no filter
             for (String category : categories) {
                 comboBoxCategory.addItem(category);
             }
 
             Vector<String> brands = mySQL.getUniqueValues("Brand");
+            comboBoxBrand.addItem(""); // Add empty value for no filter
             for (String brand : brands) {
                 comboBoxBrand.addItem(brand);
             }
 
+            comboBoxSortedBy.addItem(""); // Add empty value for no sorting
             comboBoxSortedBy.addItem("ID");
             comboBoxSortedBy.addItem("Name");
             comboBoxSortedBy.addItem("SellPrice ascending");
             comboBoxSortedBy.addItem("SellPrice descending");
+
+            // No item selected by default
+            comboBoxCategory.setSelectedIndex(-1);
+            comboBoxBrand.setSelectedIndex(-1);
+            comboBoxSortedBy.setSelectedIndex(-1);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,6 +142,11 @@ public class BrowseProduct extends JPanel {
         textFieldMaxPrice = new JTextField();
         applyFilterButton = new JButton("Apply Filter");
         clearFilterButton = new JButton("Clear Filter");
+
+        // Set fixed size for text fields
+        Dimension textFieldSize = new Dimension(100, 20);
+        textFieldMinPrice.setPreferredSize(textFieldSize);
+        textFieldMaxPrice.setPreferredSize(textFieldSize);
 
         tableModel = new DefaultTableModel(new String[]{"ID", "Name", "Stock", "Sell Price", "Category"}, 0);
         productTable.setModel(tableModel);

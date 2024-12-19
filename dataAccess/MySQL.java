@@ -155,4 +155,34 @@ public class MySQL {
         }
         return values;
     }
+
+    // Check if stock is sufficient for a given product ID and required quantity
+    public boolean isStockSufficient(int productId, int requiredQuantity) {
+        String query = "SELECT Stock FROM Products WHERE ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, productId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                int currentStock = rs.getInt("Stock");
+                return currentStock >= requiredQuantity;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Reduce the stock for a given product ID after an order is placed
+    public void reduceProductStock(int productId, int quantity) {
+        String query = "UPDATE Products SET Stock = Stock - ? WHERE ID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, quantity);
+            stmt.setInt(2, productId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

@@ -1,6 +1,7 @@
 package controller.customer;
 
 import dataAccess.MongoDB;
+import dataAccess.MySQL;
 import model.Customer;
 import model.Order;
 import view.customer.CustomerOrderHistory;
@@ -14,11 +15,13 @@ public class CustomerOrderHistoryController implements ActionListener {
     private CustomerOrderHistory view;
     private Customer customer;
     private MongoDB mongoDB;
+    private MySQL mySQL;
 
-    public CustomerOrderHistoryController(Customer customer, MongoDB mongoDB) {
+    public CustomerOrderHistoryController(Customer customer, MongoDB mongoDB, MySQL mySQL) {
         this.customer = customer;
         this.mongoDB = mongoDB;
         this.view = new CustomerOrderHistory();
+        this.mySQL = mySQL;
 
         // Populate order history
         loadOrderHistory();
@@ -51,18 +54,28 @@ public class CustomerOrderHistoryController implements ActionListener {
     }
 
 
-
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == view.getInspectOrderButton()) {
             String selectedOrderID = view.getBrowseOrderHistory().getSelectedOrderID();
             if (selectedOrderID != null) {
-                // Call CustomerOrderDetailController to handle detailed view (placeholder for now)
-                JOptionPane.showMessageDialog(view, "Inspecting Order: " + selectedOrderID, "Order Detail", JOptionPane.INFORMATION_MESSAGE);
+                // Retrieve the selected order from MongoDB
+                Order selectedOrder = mongoDB.getOrdersBySource("all", null, false)
+                        .stream()
+                        .filter(order -> order.getOrderID().equals(selectedOrderID))
+                        .findFirst()
+                        .orElse(null);
 
+                if (selectedOrder != null) {
+                    // Open the CustomerOrderDetailController
+                    new CustomerOrderDetailController(selectedOrder, customer, mongoDB, mySQL);
+                } else {
+                    JOptionPane.showMessageDialog(view, "Failed to retrieve the selected order.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             } else {
                 JOptionPane.showMessageDialog(view, "Please select an order to inspect.", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         }
     }
+
 }

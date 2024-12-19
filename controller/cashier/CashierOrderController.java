@@ -79,6 +79,14 @@ public class CashierOrderController implements ActionListener {
                 return;
             }
 
+            if (!mySQL.isStockSufficient(product.getId(), quantity)) {
+                JOptionPane.showMessageDialog(view,
+                        "Insufficient stock for product: " + product.getName(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             // Update quantity in the Map
             productQuantityMap.merge(product.getId(), quantity, Integer::sum);
             updateOrderLinesTable();
@@ -118,6 +126,16 @@ public class CashierOrderController implements ActionListener {
             return;
         }
 
+        for (Map.Entry<Integer, Integer> entry : productQuantityMap.entrySet()) {
+            if (!mySQL.isStockSufficient(entry.getKey(), entry.getValue())) {
+                JOptionPane.showMessageDialog(view,
+                        "Insufficient stock for product ID: " + entry.getKey(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+
         // Ensure the customer exists in the database
         Customer customer = mongoDB.ensureCustomerExists(customerId, "Unknown", false);
 
@@ -131,6 +149,8 @@ public class CashierOrderController implements ActionListener {
             Product product = mySQL.getProductById(entry.getKey());
             if (product != null) {
                 order.addOrderLine(OrderLine.createFromProduct(product, entry.getValue()));
+                // Reduce stock for the product
+                mySQL.reduceProductStock(product.getId(), entry.getValue());
             }
         }
 
@@ -159,6 +179,7 @@ public class CashierOrderController implements ActionListener {
 
     private void handleAddCustomer() {
         customerId = JOptionPane.showInputDialog(view, "Enter Customer ID:");
+
     }
 
     private void updateOrderLinesTable() {

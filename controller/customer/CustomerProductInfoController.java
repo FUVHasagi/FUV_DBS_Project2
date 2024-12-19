@@ -2,6 +2,7 @@
 package controller.customer;
 
 import dataAccess.MongoDB;
+import dataAccess.MySQL;
 import model.Customer;
 import model.Order;
 import model.OrderLine;
@@ -20,11 +21,14 @@ public class CustomerProductInfoController implements ActionListener {
     private Product product;
     private Customer customer;
     private MongoDB mongoDB;
+    private MySQL mySQL;
 
-    public CustomerProductInfoController(Product product, Customer customer, MongoDB mongoDB) {
+    public CustomerProductInfoController(Product product, Customer customer, MongoDB mongoDB, MySQL mySQL) {
         this.product = product;
         this.customer = customer;
         this.mongoDB = mongoDB;
+        this.mySQL = mySQL;
+
         ProductInformation productInfoPanel = new ProductInformation();
         productInfoPanel.setProduct(product);
         productInfoPanel.setEditable(false);
@@ -76,14 +80,34 @@ public class CustomerProductInfoController implements ActionListener {
 
     private void handleAddToCart() {
         int quantity = (int) view.getSpinnerQuantity().getValue();
+
+        // Check if the quantity is valid
+        if (quantity <= 0) {
+            JOptionPane.showMessageDialog(view, "Quantity must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Check stock sufficiency
+        boolean isStockSufficient = mySQL.isStockSufficient(product.getId(), quantity);
+        if (!isStockSufficient) {
+            JOptionPane.showMessageDialog(view, "Insufficient stock for the selected product.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         try {
+            // Add product to the cart
             OrderLine orderLine = OrderLine.createFromProduct(product, quantity);
             customer.addItemToCart(orderLine);
-            JOptionPane.showMessageDialog(view, "Product added to cart!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+            // Reduce stock in the database
+            mySQL.reduceProductStock(product.getId(), quantity);
+
+            JOptionPane.showMessageDialog(view, "Product added to cart successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(view, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     private void handlePostReview() {
         String reviewText = view.getWriteReviewArea().getText().trim();

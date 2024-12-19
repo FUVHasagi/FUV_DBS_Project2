@@ -1,6 +1,7 @@
 package controller.customer;
 
 import dataAccess.MongoDB;
+import dataAccess.MySQL;
 import model.Cart;
 import model.Customer;
 import model.Order;
@@ -17,8 +18,9 @@ public class CartController implements ActionListener {
     private CartView view;
     private Customer customer;
     private MongoDB mongoDB;
+    private MySQL mySQL;
 
-    public CartController(Customer customer, MongoDB mongoDB) {
+    public CartController(Customer customer, MongoDB mongoDB, MySQL mySQL) {
         this.customer = customer;
         this.mongoDB = mongoDB;
 
@@ -115,11 +117,27 @@ public class CartController implements ActionListener {
             return;
         }
 
+        for (OrderLine item : customer.getCart().getItems().values()) {
+            if (!mySQL.isStockSufficient(item.getProductID(), item.getQuantity())) {
+                JOptionPane.showMessageDialog(view,
+                        "Insufficient stock for product: " + item.getProductName(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+
         int confirmation = JOptionPane.showConfirmDialog(view, "Do you want to proceed to checkout?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirmation == JOptionPane.YES_OPTION) {
             try {
                 Order order = customer.createOrder(); // Create the order
                 mongoDB.saveOrder(order);            // Save the order in MongoDB
+
+                // Reduce stock for all items in the order
+                for (OrderLine item : order.getLines()) {
+                    mySQL.reduceProductStock(item.getProductID(), item.getQuantity());
+                }
+
                 customer.clearCart();                // Clear the cart after successful order
                 populateCartTable();                 // Refresh the cart table
                 JOptionPane.showMessageDialog(view, "Order placed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);

@@ -96,6 +96,6 @@ public class CustomerOrderDetailController implements ActionListener {
         }
 
         // Open the product review view (CustomerProductInfoView)
-        new CustomerProductInfoController(product, customer, mongoDB);
+        new CustomerProductInfoController(product, customer, mongoDB, mySQL);
     }
 }
