@@ -65,7 +65,7 @@ public class ManagerOrderHistoryController implements ActionListener {
     private void inspectOrder() {
         String selectedOrderId = view.getBrowseOrderHistory().getSelectedOrderID();
         if (selectedOrderId != null) {
-            JOptionPane.showMessageDialog(view, "Order Details for: " + selectedOrderId, "Info", JOptionPane.INFORMATION_MESSAGE);
+            new ManagerOrderDetailController(selectedOrderId, mongoDB);
         } else {
             JOptionPane.showMessageDialog(view, "Please select an order.", "Warning", JOptionPane.WARNING_MESSAGE);
         }

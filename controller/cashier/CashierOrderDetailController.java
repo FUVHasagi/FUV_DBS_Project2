@@ -39,7 +39,7 @@ public class CashierOrderDetailController implements ActionListener {
 
     private Order fetchOrderDetails(String orderId) {
         try {
-            List<Order> orders = mongoDB.getOrdersBySource("cashier", String.valueOf(cashier.getId()), true);
+            List<Order> orders = mongoDB.getOrdersBySource("all", String.valueOf(cashier.getId()), true);
             for (Order ord : orders) {
                 if (ord.getOrderID().equals(orderId)) {
                     return ord;

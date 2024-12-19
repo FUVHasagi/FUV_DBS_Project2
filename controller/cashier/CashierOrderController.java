@@ -109,9 +109,22 @@ public class CashierOrderController implements ActionListener {
 
     private void handleDeleteProduct() {
         int selectedProductId = view.getOrderLinePanel().getSelectedProductID();
-        orderLines.removeIf(orderLine -> orderLine.getProductID() == selectedProductId);
-        updateOrderLinesTable();
+
+        if (selectedProductId == -1) {
+            JOptionPane.showMessageDialog(view, "No product selected. Please select a product to delete.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Remove the product from the map
+        if (productQuantityMap.containsKey(selectedProductId)) {
+            productQuantityMap.remove(selectedProductId);
+            updateOrderLinesTable();
+            JOptionPane.showMessageDialog(view, "Product removed from the order.", "Info", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(view, "Product not found in the order.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
+
 
     private void handleLoadProduct() {
         try {
@@ -128,9 +141,23 @@ public class CashierOrderController implements ActionListener {
     }
 
     private void handleClearOrder() {
-        productQuantityMap.clear();
-        updateOrderLinesTable();
+        if (productQuantityMap.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Order is already empty.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(view,
+                "Are you sure you want to clear the entire order?",
+                "Confirm Clear Order",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            productQuantityMap.clear();
+            updateOrderLinesTable();
+            JOptionPane.showMessageDialog(view, "Order cleared successfully.", "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
+
 
     private void handleFinishAndPay() {
         if (productQuantityMap.isEmpty()) {

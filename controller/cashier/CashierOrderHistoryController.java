@@ -55,7 +55,7 @@ public class CashierOrderHistoryController implements ActionListener {
     }
 
     private void handleInspectOrder() {
-        String selectedOrderId = view.getBrowseOrderHistory().getSelectedOrderID();
+        String selectedOrderId = this.view.getBrowseOrderHistory().getSelectedOrderID();
         if (selectedOrderId != null) {
             new CashierOrderDetailController(selectedOrderId, mongoDB, cashier);
         } else {
