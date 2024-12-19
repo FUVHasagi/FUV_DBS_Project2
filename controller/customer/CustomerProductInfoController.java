@@ -28,10 +28,12 @@ public class CustomerProductInfoController implements ActionListener {
         ProductInformation productInfoPanel = new ProductInformation();
         productInfoPanel.setProduct(product);
         productInfoPanel.setEditable(false);
+        productInfoPanel.getFieldID().setEditable(false);
 
         this.view = new CustomerProductInfoView(productInfoPanel);
 
-
+        // Check eligibility for review
+        checkReviewEligibility();
 
         // Add action listeners
         this.view.getAddToCartButton().addActionListener(this);
@@ -84,36 +86,24 @@ public class CustomerProductInfoController implements ActionListener {
     }
 
     private void handlePostReview() {
-        if (hasCustomerPurchasedProduct()) {
-            String reviewText = view.getWriteReviewArea().getText().trim();
-            if (reviewText.isEmpty()) {
-                JOptionPane.showMessageDialog(view, "Review cannot be empty.", "Warning", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            int rating = getRatingFromUser();
-            if (rating > 0) {
-                Review review = new Review(product.getId(), customer.getId(), rating, reviewText);
-                mongoDB.saveReview(review);
-                loadProductReviews();
-                view.getWriteReviewArea().setText("");
-                JOptionPane.showMessageDialog(view, "Review posted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            }
-        } else {
-            JOptionPane.showMessageDialog(view, "You can only review products you've purchased.", "Error", JOptionPane.ERROR_MESSAGE);
+        String reviewText = view.getWriteReviewArea().getText().trim();
+        if (reviewText.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Review cannot be empty.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-    }
 
-    private boolean hasCustomerPurchasedProduct() {
-        List<Order> orders = mongoDB.getOrdersBySource("customer", customer.getId());
-        for (Order order : orders) {
-            for (OrderLine line : order.getLines()) {
-                if (line.getProductID() == product.getId()) {
-                    return true;
-                }
-            }
+        int rating = getRatingFromUser();
+        if (rating > 0) {
+            Review review = new Review(product.getId(), customer.getId(), rating, reviewText);
+            mongoDB.saveReview(review);
+            loadProductReviews();
+            view.getWriteReviewArea().setText("");
+            JOptionPane.showMessageDialog(view, "Review posted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+            // Disable review inputs after posting
+            view.getPostReviewButton().setEnabled(false);
+            view.getWriteReviewArea().setEnabled(false);
         }
-        return false;
     }
 
     private int getRatingFromUser() {
@@ -126,4 +116,20 @@ public class CustomerProductInfoController implements ActionListener {
         }
         return -1; // Indicate user canceled
     }
+
+    private void checkReviewEligibility() {
+        boolean hasBought = mongoDB.hasCustomerBoughtProduct(customer.getId(), product.getId());
+        boolean hasReviewed = mongoDB.hasCustomerReviewedProduct(customer.getId(), product.getId());
+
+        if (!hasBought || hasReviewed) {
+            view.getPostReviewButton().setEnabled(false);
+            view.getWriteReviewArea().setEnabled(false);
+
+            String message = !hasBought
+                    ? "You can only review products you've purchased."
+                    : "You have already reviewed this product.";
+            JOptionPane.showMessageDialog(view, message, "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
 }

@@ -3,12 +3,14 @@ package model;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 public class Customer {
     private String fullName;
     private String id;
     private Cart cart;
+    private HashSet<Integer> boughtProducts = new HashSet<>();
 
     // Constructor
     public Customer(String fullName, String id) {
@@ -88,5 +90,29 @@ public class Customer {
     private String generateOrderDate() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return sdf.format(new Date());
+    }
+
+    // Method to set the bought products
+    public void setBoughtProducts(HashSet<Integer> boughtProducts) {
+        if (boughtProducts != null) {
+            this.boughtProducts = boughtProducts;
+        } else {
+            this.boughtProducts = new HashSet<>();
+        }
+    }
+
+    // Method to get the bought products (optional, if needed elsewhere)
+    public HashSet<Integer> getBoughtProducts() {
+        return this.boughtProducts;
+    }
+
+    // Method to check if a product has been bought by the customer
+    public boolean hasBoughtProduct(int productId) {
+        return boughtProducts.contains(productId);
+    }
+
+    // Method to add a product to the bought products
+    public void addBoughtProduct(int productId) {
+        boughtProducts.add(productId);
     }
 }

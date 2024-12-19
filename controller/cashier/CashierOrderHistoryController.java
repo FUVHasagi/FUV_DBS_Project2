@@ -34,12 +34,18 @@ public class CashierOrderHistoryController implements ActionListener {
 
     private void loadOrderHistory() {
         try {
-            List<Order> orders = mongoDB.getOrdersBySource("cashier", String.valueOf(cashier.getId()));
-            view.getBrowseOrderHistory().setTableData(orders);
+            List<Order> orders = mongoDB.getOrdersBySource("cashier", String.valueOf(cashier.getId()), false);
+
+            if (orders.isEmpty()) {
+                JOptionPane.showMessageDialog(view, "No orders found for this cashier.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                view.getBrowseOrderHistory().setTableData(orders);
+            }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(view, "Failed to load order history.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(view, "Failed to load order history: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     @Override
     public void actionPerformed(ActionEvent e) {

@@ -50,11 +50,13 @@ public class BrowseOrderHistory extends JPanel {
                         order.getOrderID(),
                         order.getOrderDate(),
                         order.getTotalCost(),
-                        order.getSourceType()
+                        order.getSourceType(),
+                        order.getSourceID()     // Add Cashier info
                 });
             }
         }
     }
+
 
     // Get the selected order ID
     public String getSelectedOrderID() {

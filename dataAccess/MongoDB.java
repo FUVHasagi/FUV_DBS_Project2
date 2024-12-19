@@ -4,8 +4,10 @@ import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
 import model.*;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class MongoDB {
@@ -30,6 +32,9 @@ public class MongoDB {
         collection.insertOne(customerDoc);
     }
 
+
+
+
     public Customer getCustomerById(String customerId) {
         MongoCollection<Document> collection = database.getCollection("customers");
         Document doc = collection.find(Filters.eq("id", customerId)).first();
@@ -46,31 +51,73 @@ public class MongoDB {
 
     // Save an order
     public void saveOrder(Order order) {
-        MongoCollection<Document> collection = database.getCollection("orders");
+        MongoCollection<Document> ordersCollection = database.getCollection("orders");
+        MongoCollection<Document> customersCollection = database.getCollection("customers");
+
+        // Check if the customer exists and has a valid ID
+        if (order.getCustomerID() != null) {
+            Document customerDoc = customersCollection.find(Filters.eq("id", order.getCustomerID())).first();
+            if (customerDoc == null) {
+                throw new IllegalArgumentException("Customer ID not found: " + order.getCustomerID());
+            }
+
+            // Update the bought products list for the customer
+            List<Integer> boughtProducts = customerDoc.containsKey("boughtProducts")
+                    ? (List<Integer>) customerDoc.get("boughtProducts")
+                    : new ArrayList<>();
+
+            for (OrderLine line : order.getLines()) {
+                if (!boughtProducts.contains(line.getProductID())) {
+                    boughtProducts.add(line.getProductID());
+                }
+            }
+
+            customersCollection.updateOne(
+                    Filters.eq("id", order.getCustomerID()),
+                    new Document("$set", new Document("boughtProducts", boughtProducts))
+            );
+        }
+
+        // Save the order
         Document orderDoc = new Document("orderID", order.getOrderID())
-                .append("sourceType", order.getSourceType()) // "customer" or "cashier"
-                .append("sourceID", order.getSourceID())     // Customer or Cashier ID
+                .append("sourceType", order.getSourceType())
+                .append("sourceID", order.getSourceID())
                 .append("orderDate", order.getOrderDate())
                 .append("totalCost", order.getTotalCost())
                 .append("orderLines", serializeOrderLines(order.getLines()));
 
-        // Add customerID only if it exists
         if (order.getCustomerID() != null) {
             orderDoc.append("customerID", order.getCustomerID());
         }
 
-        collection.insertOne(orderDoc);
+        ordersCollection.insertOne(orderDoc);
     }
 
-    public List<Order> getOrdersBySource(String sourceType, String sourceID) {
+
+    public List<Order> getOrdersBySource(String sourceType, String sourceID, boolean forCustomer) {
         MongoCollection<Document> collection = database.getCollection("orders");
         List<Order> orders = new ArrayList<>();
 
-        for (Document doc : collection.find(Filters.and(
-                Filters.eq("sourceType", sourceType),
-                Filters.eq("sourceID", sourceID)))) {
+        Bson filter;
+
+        if ("all".equalsIgnoreCase(sourceType)) {
+            // Match all orders
+            filter = Filters.exists("_id");
+        } else if (forCustomer && "cashier".equalsIgnoreCase(sourceType)) {
+            // Orders placed by cashiers for a specific customer
+            filter = Filters.eq("customerID", sourceID);
+        } else if (sourceType != null && sourceID != null) {
+            // Generic filtering by source type and source ID
+            filter = Filters.and(Filters.eq("sourceType", sourceType), Filters.eq("sourceID", sourceID));
+        } else {
+            return orders; // Return empty for invalid parameters
+        }
+
+        // Retrieve and deserialize matching orders
+        for (Document doc : collection.find(filter)) {
             orders.add(deserializeOrder(doc));
         }
+
         return orders;
     }
 
@@ -96,13 +143,32 @@ public class MongoDB {
 
     // Save a product review
     public void saveReview(Review review) {
-        MongoCollection<Document> collection = database.getCollection("reviews");
+        MongoCollection<Document> reviewsCollection = database.getCollection("reviews");
+        MongoCollection<Document> customersCollection = database.getCollection("customers");
+
+        // Save the review
         Document reviewDoc = new Document("productID", review.getProductId())
                 .append("customerID", review.getCustomerId())
                 .append("rating", review.getRating())
                 .append("comment", review.getComment());
-        collection.insertOne(reviewDoc);
+        reviewsCollection.insertOne(reviewDoc);
+
+        // Update the customer's reviewed products list
+        Document customerDoc = customersCollection.find(Filters.eq("id", review.getCustomerId())).first();
+        if (customerDoc != null) {
+            List<Integer> reviewedProducts = customerDoc.containsKey("reviewedProducts")
+                    ? (List<Integer>) customerDoc.get("reviewedProducts")
+                    : new ArrayList<>();
+            if (!reviewedProducts.contains(review.getProductId())) {
+                reviewedProducts.add(review.getProductId());
+                customersCollection.updateOne(
+                        Filters.eq("id", review.getCustomerId()),
+                        new Document("$set", new Document("reviewedProducts", reviewedProducts))
+                );
+            }
+        }
     }
+
 
     // Retrieve reviews for a specific product
     public List<Review> getReviewsByProductId(int productId) {
@@ -191,21 +257,67 @@ public class MongoDB {
         return lines;
     }
 
-    public Customer ensureCustomerExists(String customerId, String displayName) {
-        // Check if the customer already exists in the MongoDB database
-        Customer existingCustomer = getCustomerById(customerId);
-        if (existingCustomer != null) {
-            // Return the existing customer
-            return existingCustomer;
+    public Customer ensureCustomerExists(String customerId, String displayName, boolean createNewCustomer) {
+        MongoCollection<Document> customersCollection = database.getCollection("customers");
+
+        // Check if the customer already exists
+        Document customerDoc = customersCollection.find(Filters.eq("id", customerId)).first();
+        if (customerDoc != null) {
+            // Deserialize the existing customer
+            Customer customer = new Customer(
+                    customerDoc.getString("fullName"),
+                    customerDoc.getString("id")
+            );
+
+            // Initialize or load bought products
+            if (customerDoc.containsKey("boughtProducts")) {
+                List<Integer> boughtProducts = (List<Integer>) customerDoc.get("boughtProducts");
+                customer.setBoughtProducts(new HashSet<>(boughtProducts));
+            }
+
+            return customer;
+        }
+        if (createNewCustomer) {
+            // Create a new customer if not found
+            Customer newCustomer = new Customer(displayName, customerId);
+            newCustomer.setBoughtProducts(new HashSet<>());
+
+            // Save the new customer
+            Document newCustomerDoc = new Document("id", customerId)
+                    .append("fullName", displayName)
+                    .append("boughtProducts", new ArrayList<>());
+            customersCollection.insertOne(newCustomerDoc);
+
+            return newCustomer;
+        }
+        else return null;
+    }
+
+    public boolean hasCustomerBoughtProduct(String customerId, int productId) {
+        MongoCollection<Document> customersCollection = database.getCollection("customers");
+
+        // Check the bought products list for the customer
+        Document customerDoc = customersCollection.find(Filters.eq("id", customerId)).first();
+        if (customerDoc != null && customerDoc.containsKey("boughtProducts")) {
+            List<Integer> boughtProducts = (List<Integer>) customerDoc.get("boughtProducts");
+            return boughtProducts.contains(productId);
         }
 
-        // If customer doesn't exist, create a new one
-        Customer newCustomer = new Customer(displayName, customerId);
-
-        // Save the new customer to the MongoDB database
-        saveCustomer(newCustomer);
-
-        // Return the newly created customer
-        return newCustomer;
+        return false;
     }
+
+    public boolean hasCustomerReviewedProduct(String customerId, int productId) {
+        MongoCollection<Document> customersCollection = database.getCollection("customers");
+
+        // Check the reviewed products list for the customer
+        Document customerDoc = customersCollection.find(Filters.eq("id", customerId)).first();
+        if (customerDoc != null && customerDoc.containsKey("reviewedProducts")) {
+            List<Integer> reviewedProducts = (List<Integer>) customerDoc.get("reviewedProducts");
+            return reviewedProducts.contains(productId);
+        }
+
+        return false;
+    }
+
+
 }

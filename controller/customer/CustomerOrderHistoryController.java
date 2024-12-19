@@ -31,9 +31,26 @@ public class CustomerOrderHistoryController implements ActionListener {
     }
 
     private void loadOrderHistory() {
-        List<Order> orders = mongoDB.getOrdersBySource("customer", customer.getId());
-        view.getBrowseOrderHistory().setTableData(orders);
+        try {
+            // Get orders placed by the customer
+            List<Order> customerOrders = mongoDB.getOrdersBySource("customer", customer.getId(), false);
+
+            // Get orders placed by cashiers for the customer
+            List<Order> cashierOrdersForCustomer = mongoDB.getOrdersBySource("cashier", customer.getId(), true);
+
+            customerOrders.addAll(cashierOrdersForCustomer);
+
+            if (customerOrders.isEmpty()) {
+                JOptionPane.showMessageDialog(view, "No orders found for this customer.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                view.getBrowseOrderHistory().setTableData(customerOrders);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(view, "Failed to load order history: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
+
+
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -42,6 +59,7 @@ public class CustomerOrderHistoryController implements ActionListener {
             if (selectedOrderID != null) {
                 // Call CustomerOrderDetailController to handle detailed view (placeholder for now)
                 JOptionPane.showMessageDialog(view, "Inspecting Order: " + selectedOrderID, "Order Detail", JOptionPane.INFORMATION_MESSAGE);
+
             } else {
                 JOptionPane.showMessageDialog(view, "Please select an order to inspect.", "Warning", JOptionPane.WARNING_MESSAGE);
             }

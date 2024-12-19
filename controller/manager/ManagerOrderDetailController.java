@@ -36,7 +36,7 @@ public class ManagerOrderDetailController implements ActionListener {
 
     private Order fetchOrderDetails(String orderId) {
         try {
-            List<Order> allOrders = mongoDB.getOrdersBySource("all", null);
+            List<Order> allOrders = mongoDB.getOrdersBySource("all", null, false);
             for (Order ord : allOrders) {
                 if (ord.getOrderID().equals(orderId)) {
                     return ord;

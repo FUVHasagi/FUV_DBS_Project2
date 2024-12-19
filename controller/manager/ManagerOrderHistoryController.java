@@ -24,7 +24,7 @@ public class ManagerOrderHistoryController implements ActionListener {
 
         // Refresh cache with recent orders on initialization
         try {
-            List<Order> recentOrders = mongoDB.getOrdersBySource("all", null);
+            List<Order> recentOrders = mongoDB.getOrdersBySource("all", null, false);
             redis.cacheOrders("recent_orders", recentOrders);
         } catch (Exception e) {
             System.err.println("Failed to refresh recent orders cache: " + e.getMessage());
@@ -44,23 +44,36 @@ public class ManagerOrderHistoryController implements ActionListener {
 
     private void loadRecentOrders() {
         try {
-            List<Order> recentOrders = fetchOrdersFromRedis("recent_orders");
+            List<Order> recentOrders = redis.getCachedOrders("recent_orders");
+
             if (recentOrders.isEmpty()) {
-                recentOrders = mongoDB.getOrdersBySource("all", null); // Fetch all recent orders
-                cacheOrdersToRedis(recentOrders, "recent_orders");
+                recentOrders = mongoDB.getOrdersBySource("all", null, false);
+                redis.cacheOrders("recent_orders", recentOrders);
             }
-            view.getBrowseOrderHistory().setTableData(recentOrders);
+
+            if (recentOrders.isEmpty()) {
+                JOptionPane.showMessageDialog(view, "No recent orders found.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                view.getBrowseOrderHistory().setTableData(recentOrders);
+            }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(view, "Failed to load recent orders.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(view, "Failed to load recent orders: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+
+
     private void loadAllOrders() {
         try {
-            List<Order> allOrders = mongoDB.getOrdersBySource("all", null);
-            view.getBrowseOrderHistory().setTableData(allOrders);
+            List<Order> allOrders = mongoDB.getOrdersBySource("all", null, false);
+
+            if (allOrders.isEmpty()) {
+                JOptionPane.showMessageDialog(view, "No orders found.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                view.getBrowseOrderHistory().setTableData(allOrders);
+            }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(view, "Failed to load all orders.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(view, "Failed to load all orders: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

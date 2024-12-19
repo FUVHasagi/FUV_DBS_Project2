@@ -53,7 +53,7 @@ public class LoginController {
                 case "customer":
                     // Ensure Customer Exists or Create in MongoDB
                     String customerId = user.getCustomerId();
-                    Customer customer = mongoDB.ensureCustomerExists(customerId, user.getDisplayName());
+                    Customer customer = mongoDB.ensureCustomerExists(customerId, user.getDisplayName(), true);
                     user.setCustomer(customer);
 
                     new CustomerMainScreenController(user, customerId, mySQL, mongoDB, redis);
